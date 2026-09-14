@@ -359,6 +359,8 @@ async function configureSmokePage(page: Page, directory: string) {
       "settings.v3",
       JSON.stringify({
         general: {
+          newLayoutDesigns: true,
+          layoutDefaultReset: true,
           editToolPartsExpanded: true,
           shellToolPartsExpanded: true,
           showReasoningSummaries: true,

@@ -127,6 +127,8 @@ async function configurePage(page: Page) {
       "settings.v3",
       JSON.stringify({
         general: {
+          newLayoutDesigns: true,
+          layoutDefaultReset: true,
           editToolPartsExpanded: true,
           shellToolPartsExpanded: true,
           showReasoningSummaries: true,

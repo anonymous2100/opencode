@@ -130,11 +130,14 @@ export async function setupTimeline(
       "settings.v3",
       JSON.stringify({
         general: {
+          newLayoutDesigns: true,
+          layoutDefaultReset: true,
           editToolPartsExpanded: false,
           shellToolPartsExpanded: false,
           showReasoningSummaries: false,
           showSessionProgressBar: true,
           ...settings,
+          ...(settings.newLayoutDesigns === true ? { layoutDefaultReset: true } : {}),
         },
       }),
     )

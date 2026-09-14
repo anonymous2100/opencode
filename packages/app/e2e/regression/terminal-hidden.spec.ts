@@ -91,6 +91,12 @@ test("unmounts the terminal panel while it is hidden", async ({ page }) => {
     }),
   )
   await page.routeWebSocket("**/api/pty/pty_hidden_terminal/connect", () => undefined)
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "settings.v3",
+      JSON.stringify({ general: { newLayoutDesigns: true, layoutDefaultReset: true } }),
+    )
+  })
 
   await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
   await expectSessionTitle(page, title)

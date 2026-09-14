@@ -104,6 +104,10 @@ for (const scenario of scenarios) {
       },
     })
     await page.addInitScript(() => {
+      localStorage.setItem(
+        "settings.v3",
+        JSON.stringify({ general: { newLayoutDesigns: true, layoutDefaultReset: true } }),
+      )
       const visibleParts = () => {
         const virtual = document.querySelector<HTMLElement>("[data-timeline-virtual-content]")
         const viewport = virtual?.closest<HTMLElement>(".scroll-view__viewport")

@@ -42,7 +42,7 @@ test("preserves nested patch file state through outer collapse and reopen", asyn
         ),
       ]),
     ],
-    settings: { editToolPartsExpanded: true },
+    settings: { editToolPartsExpanded: true, newLayoutDesigns: true, layoutDefaultReset: true },
   })
   const wrapper = page.locator(`[data-timeline-part-id="${patchID}"]`)
   const outer = wrapper.locator('[data-slot="collapsible-trigger"]').first()

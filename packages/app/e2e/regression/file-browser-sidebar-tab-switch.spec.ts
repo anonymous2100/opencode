@@ -161,7 +161,7 @@ async function setup(
 
   await page.addInitScript(
     ({ directory, server, sessionID }) => {
-      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true, layoutDefaultReset: true } }))
       localStorage.setItem(
         "opencode.global.dat:server",
         JSON.stringify({

@@ -28,6 +28,12 @@ test.beforeEach(async ({ page }) => {
     session.title = payload.title
     await route.fulfill({ json: session, headers: { "access-control-allow-origin": "*" } })
   })
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "settings.v3",
+      JSON.stringify({ general: { newLayoutDesigns: true, layoutDefaultReset: true } }),
+    )
+  })
   await page.addInitScript((directory) => {
     localStorage.setItem(
       "opencode.global.dat:server",

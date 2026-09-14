@@ -82,7 +82,7 @@ test("keeps the patch card inside a fractionally short virtual row", async ({ pa
         toolPart(patchID, "apply_patch", "completed", { files: [file.filePath] }, { metadata: { files: [file] } }),
       ]),
     ],
-    settings: { editToolPartsExpanded: true, newLayoutDesigns: true },
+    settings: { editToolPartsExpanded: true, newLayoutDesigns: true, layoutDefaultReset: true },
     reducedMotion: true,
   })
   const part = page.locator(`[data-timeline-part-id="${patchID}"]`)

@@ -83,7 +83,7 @@ test("expands a folder whose path has a trailing Windows separator", async ({ pa
     ({ directory, server, sessionID }) => {
       localStorage.setItem(
         "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
+        JSON.stringify({ general: { newLayoutDesigns: true, layoutDefaultReset: true, shouldDisplayTabsToast: false } }),
       )
       localStorage.setItem(
         "opencode.global.dat:server",

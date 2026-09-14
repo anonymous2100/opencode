@@ -45,7 +45,7 @@ test("renders a completed single-file patch", async ({ page }) => {
         ),
       ]),
     ],
-    settings: { editToolPartsExpanded: true },
+    settings: { editToolPartsExpanded: true, newLayoutDesigns: true, layoutDefaultReset: true },
   })
 
   await expect(page.locator(`[data-timeline-part-id="${id}"] [data-component="apply-patch-file-diff"]`)).toBeVisible()

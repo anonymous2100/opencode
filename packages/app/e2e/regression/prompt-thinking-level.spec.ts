@@ -50,7 +50,7 @@ test("shows the V2 thinking level control while relevant", async ({ page }) => {
     pageMessages: () => ({ items: [] }),
   })
   await page.addInitScript(() => {
-    localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+    localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true, layoutDefaultReset: true } }))
   })
 
   await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)

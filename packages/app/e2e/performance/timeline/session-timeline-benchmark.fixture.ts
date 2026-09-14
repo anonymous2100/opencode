@@ -131,6 +131,7 @@ export async function setupTimelineBenchmark(
         JSON.stringify({
           general: {
             newLayoutDesigns: input.newLayoutDesigns,
+            ...(input.newLayoutDesigns === true ? { layoutDefaultReset: true } : {}),
             editToolPartsExpanded: true,
             shellToolPartsExpanded: true,
             showReasoningSummaries: true,
