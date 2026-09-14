@@ -281,21 +281,6 @@ export const SettingsGeneral: Component = () => {
     </div>
   )
 
-  const InterfaceNoticeSection = () => (
-    <div class="flex flex-col gap-1">
-      <SettingsList>
-        <SettingsRow
-          title={language.t("settings.general.row.newInterfaceNotice.title")}
-          description={language.t("settings.general.row.newInterfaceNotice.description")}
-        >
-          <Button size="small" variant="ghost" onClick={settings.general.dismissNewInterfaceNotice}>
-            {language.t("settings.general.row.newInterfaceNotice.dismiss")}
-          </Button>
-        </SettingsRow>
-      </SettingsList>
-    </div>
-  )
-
   const GeneralSection = () => (
     <div class="flex flex-col gap-1">
       <SettingsList>
@@ -748,13 +733,7 @@ export const SettingsGeneral: Component = () => {
       </div>
 
       <div class="flex flex-col gap-8 w-full">
-        <Show when={settings.general.layoutTransitionAvailable()}>
-          <InterfaceSection />
-        </Show>
-
-        <Show when={settings.general.newInterfaceNoticeVisible()}>
-          <InterfaceNoticeSection />
-        </Show>
+        <InterfaceSection />
 
         <GeneralSection />
 
