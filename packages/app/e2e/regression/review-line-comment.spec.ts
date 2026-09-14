@@ -87,6 +87,12 @@ test("stages a submitted line comment in the prompt context", async ({ page }) =
 
 async function openReview(page: Page) {
   await page.setViewportSize({ width: 700, height: 900 })
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "settings.v3",
+      JSON.stringify({ general: { newLayoutDesigns: true, layoutDefaultReset: true } }),
+    )
+  })
   await mockOpenCodeServer(page, {
     protocol: "v2",
     directory,

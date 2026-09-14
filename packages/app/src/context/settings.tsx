@@ -208,7 +208,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
     )
     const [launchState, setLaunchState] = createStore({
       classified: false,
-      migrationApplied: false,
       previous: undefined as string | undefined,
     })
     const showFileTree = withFallback(() => store.general?.showFileTree, defaultSettings.general.showFileTree)
@@ -256,14 +255,14 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
     createEffect(() => {
       if (!ready() || !launchState.classified) return
       if (typeof store.general?.shouldDisplayTabsToast === "boolean") return
+      const existingInstall =
+        platform.platform === "web"
+          ? hasExistingWebState(settingsInit, launchState.previous)
+          : launchState.previous !== undefined
       setStore(
         "general",
         "shouldDisplayTabsToast",
-        shouldDisplayTabsToast(
-          launchState.previous,
-          platform.version,
-          hasExistingWebState(settingsInit, launchState.previous),
-        ),
+        shouldDisplayTabsToast(launchState.previous, platform.version, existingInstall),
       )
     })
 

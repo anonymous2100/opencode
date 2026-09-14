@@ -137,7 +137,6 @@ export async function setupTimeline(
           showReasoningSummaries: false,
           showSessionProgressBar: true,
           ...settings,
-          ...(settings.newLayoutDesigns === true ? { layoutDefaultReset: true } : {}),
         },
       }),
     )

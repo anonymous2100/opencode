@@ -32,6 +32,13 @@ test("shows loaded sessions before the directory path request resolves", async (
     )
   }, fixture.directory)
 
+  await page.addInitScript(() => {
+    localStorage.setItem(
+      "settings.v3",
+      JSON.stringify({ general: { newLayoutDesigns: true, layoutDefaultReset: true } }),
+    )
+  })
+
   await page.goto("/")
   try {
     await expectAppVisible(page.getByText(fixture.expected.sourceTitle).first())
