@@ -398,4 +398,56 @@ describe("provider HttpApi", () => {
     }),
     { ...projectOptions, init: writeProviderModelsMutationPlugin },
   )
+
+  it.instance(
+    "discovers models from an openai-compatible endpoint",
+    Effect.gen(function* () {
+      const directory = (yield* TestInstance).directory
+      const upstream = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          Bun.serve({
+            port: 0,
+            fetch: () => Response.json({ data: [{ id: "alpha" }, { id: "beta", name: "Beta" }] }),
+          }),
+        ),
+        (server) => Effect.promise(() => server.stop(true)),
+      )
+
+      const response = yield* request("/provider/models", {
+        method: "POST",
+        headers: { "x-opencode-directory": directory, "content-type": "application/json" },
+        body: JSON.stringify({ baseURL: upstream.url.origin }),
+      })
+
+      expect(response.status).toBe(200)
+      expect(yield* response.json).toEqual([
+        { id: "alpha", name: "alpha" },
+        { id: "beta", name: "Beta" },
+      ])
+    }),
+    projectOptions,
+    30000,
+  )
+
+  it.instance(
+    "surfaces upstream discovery failures as provider errors",
+    Effect.gen(function* () {
+      const directory = (yield* TestInstance).directory
+      const upstream = yield* Effect.acquireRelease(
+        Effect.sync(() => Bun.serve({ port: 0, fetch: () => new Response("nope", { status: 401 }) })),
+        (server) => Effect.promise(() => server.stop(true)),
+      )
+
+      const response = yield* request("/provider/models", {
+        method: "POST",
+        headers: { "x-opencode-directory": directory, "content-type": "application/json" },
+        body: JSON.stringify({ baseURL: upstream.url.origin, apiKey: "wrong" }),
+      })
+
+      expect(response.status).toBe(400)
+      expect(yield* response.json).toMatchObject({ name: "ProviderModelsError", data: { status: 401 } })
+    }),
+    projectOptions,
+    30000,
+  )
 })

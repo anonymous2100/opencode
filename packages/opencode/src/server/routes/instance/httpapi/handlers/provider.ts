@@ -1,6 +1,8 @@
 import { ProviderAuth } from "@/provider/auth"
 import { Config } from "@/config/config"
+import { Env } from "@/env"
 import { ModelsDev } from "@opencode-ai/core/models-dev"
+import { ProviderModels } from "@/provider/models"
 import { Provider } from "@/provider/provider"
 import { Auth } from "@/auth"
 
@@ -9,7 +11,7 @@ import { Effect, Schema } from "effect"
 import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
-import { ProviderAuthApiError } from "../groups/provider"
+import { ProviderAuthApiError, ProviderModelsApiError } from "../groups/provider"
 import { ProviderV2 } from "@opencode-ai/core/provider"
 
 function mapProviderAuthError<A, R>(self: Effect.Effect<A, ProviderAuth.Error, R>) {
@@ -38,6 +40,30 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
     const provider = yield* Provider.Service
     const svc = yield* ProviderAuth.Service
     const authStore = yield* Auth.Service
+    const env = yield* Env.Service
+
+    const resolveAPIKey = Effect.fnUntraced(function* (value: string | undefined) {
+      const trimmed = value?.trim()
+      if (!trimmed) return undefined
+      const name = trimmed.match(/^\{env:([^}]+)\}$/)?.[1]?.trim()
+      if (!name) return trimmed
+      return yield* env.get(name)
+    })
+
+    const models = Effect.fn("ProviderHttpApi.models")(function* (ctx: {
+      payload: ProviderModels.DiscoverInput
+    }) {
+      const apiKey = yield* resolveAPIKey(ctx.payload.apiKey)
+      return yield* ProviderModels.discover({ ...ctx.payload, apiKey }).pipe(
+        Effect.mapError(
+          (error) =>
+            new ProviderModelsApiError({
+              name: "ProviderModelsError",
+              data: { message: error.message, status: error.status },
+            }),
+        ),
+      )
+    })
 
     const list = Effect.fn("ProviderHttpApi.list")(function* () {
       const config = yield* cfg.get()
@@ -109,6 +135,7 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
 
     return handlers
       .handle("list", list)
+      .handle("models", models)
       .handle("auth", auth)
       .handleRaw("authorize", authorizeRaw)
       .handle("callback", callback)

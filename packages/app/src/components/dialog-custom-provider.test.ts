@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { validateCustomProvider } from "./dialog-custom-provider-form"
+import { mergeModels, validateCustomProvider } from "./dialog-custom-provider-form"
 
 const t = (key: string) => key
 
@@ -76,5 +76,38 @@ describe("validateCustomProvider", () => {
       key: "provider.custom.error.duplicate",
       value: undefined,
     })
+  })
+})
+
+describe("mergeModels", () => {
+  test("keeps user rows and appends discovered models that are new", () => {
+    const merged = mergeModels(
+      [
+        { row: "m0", id: "model-a", name: "My Model A", err: {} },
+        { row: "m1", id: "", name: "", err: {} },
+      ],
+      [
+        { id: "model-a", name: "Model A" },
+        { id: " model-b ", name: "" },
+        { id: "model-b", name: "Duplicate" },
+      ],
+    )
+
+    expect(merged.map((row) => ({ id: row.id, name: row.name }))).toEqual([
+      { id: "model-a", name: "My Model A" },
+      { id: "model-b", name: "model-b" },
+    ])
+  })
+
+  test("keeps duplicate user rows for validation to flag", () => {
+    const merged = mergeModels(
+      [
+        { row: "m0", id: "model-a", name: "A", err: {} },
+        { row: "m1", id: "model-a", name: "A duplicate", err: {} },
+      ],
+      [{ id: "model-a", name: "Model A" }],
+    )
+
+    expect(merged.map((row) => row.name)).toEqual(["A", "A duplicate"])
   })
 })

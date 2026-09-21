@@ -2489,6 +2489,14 @@ export type PermissionNotFoundError = {
   message: string
 }
 
+export type ProviderModelsError = {
+  name: "ProviderModelsError"
+  data: {
+    message: string
+    status?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  }
+}
+
 export type ProviderAuthMethod = {
   type: "oauth" | "api"
   label: string
@@ -9334,6 +9342,43 @@ export type ProviderListResponses = {
 }
 
 export type ProviderListResponse = ProviderListResponses[keyof ProviderListResponses]
+
+export type ProviderModelsDiscoverData = {
+  body?: {
+    baseURL: string
+    apiKey?: string
+    headers?: {
+      [key: string]: string
+    }
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/provider/models"
+}
+
+export type ProviderModelsDiscoverErrors = {
+  /**
+   * ProviderModelsError | InvalidRequestError
+   */
+  400: ProviderModelsError | InvalidRequestError
+}
+
+export type ProviderModelsDiscoverError = ProviderModelsDiscoverErrors[keyof ProviderModelsDiscoverErrors]
+
+export type ProviderModelsDiscoverResponses = {
+  /**
+   * Models reported by the provider
+   */
+  200: Array<{
+    id: string
+    name: string
+  }>
+}
+
+export type ProviderModelsDiscoverResponse = ProviderModelsDiscoverResponses[keyof ProviderModelsDiscoverResponses]
 
 export type ProviderAuthData = {
   body?: never

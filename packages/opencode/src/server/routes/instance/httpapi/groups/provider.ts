@@ -1,4 +1,5 @@
 import { ProviderAuth } from "@/provider/auth"
+import { ProviderModels } from "@/provider/models"
 import { Provider } from "@/provider/provider"
 
 import { Schema } from "effect"
@@ -31,6 +32,17 @@ export class ProviderAuthApiError extends Schema.ErrorClass<ProviderAuthApiError
   { httpApiStatus: 400 },
 ) {}
 
+export class ProviderModelsApiError extends Schema.ErrorClass<ProviderModelsApiError>("ProviderModelsError")(
+  {
+    name: Schema.Literal("ProviderModelsError"),
+    data: Schema.Struct({
+      message: Schema.String,
+      status: Schema.optional(Schema.Number),
+    }),
+  },
+  { httpApiStatus: 400 },
+) {}
+
 export const ProviderApi = HttpApi.make("provider")
   .add(
     HttpApiGroup.make("provider")
@@ -43,6 +55,19 @@ export const ProviderApi = HttpApi.make("provider")
             identifier: "provider.list",
             summary: "List providers",
             description: "Get a list of all available AI providers, including both available and connected ones.",
+          }),
+        ),
+        HttpApiEndpoint.post("models", `${root}/models`, {
+          query: WorkspaceRoutingQuery,
+          payload: ProviderModels.DiscoverInput,
+          success: described(ProviderModels.DiscoveredModels, "Models reported by the provider"),
+          error: ProviderModelsApiError,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.models.discover",
+            summary: "Discover provider models",
+            description:
+              "Query an OpenAI-compatible provider for the models it exposes so clients can offer them for selection.",
           }),
         ),
         HttpApiEndpoint.get("auth", `${root}/auth`, {

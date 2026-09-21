@@ -41,11 +41,31 @@ export type FormState = {
   }
 }
 
+export type DiscoveredModel = {
+  id: string
+  name: string
+}
+
 type ValidateArgs = {
   form: FormState
   t: Translator
   disabledProviders: string[]
   existingProviderIDs: Set<string>
+}
+
+// Merge models reported by the provider into the rows the user is editing.
+// Rows the user already touched win, empty placeholders are dropped, and
+// duplicates keep the name from the first occurrence.
+export function mergeModels(rows: ModelRow[], discovered: DiscoveredModel[]): ModelRow[] {
+  const next = rows.filter((row) => row.id.trim() || row.name.trim())
+  const seen = new Set(next.map((row) => row.id.trim()))
+  for (const model of discovered) {
+    const id = model.id.trim()
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    next.push({ ...modelRow(), id, name: model.name.trim() || id })
+  }
+  return next
 }
 
 export function validateCustomProvider(input: ValidateArgs) {

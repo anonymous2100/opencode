@@ -12,7 +12,7 @@ import { ExternalLink } from "@/components/external-link"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
-import { type FormState, headerRow, modelRow, validateCustomProvider } from "./dialog-custom-provider-form"
+import { type FormState, headerRow, mergeModels, modelRow, validateCustomProvider } from "./dialog-custom-provider-form"
 
 type Props = {
   onBack: () => void
@@ -166,6 +166,32 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
     },
   }))
 
+  const discoverMutation = useMutation(() => ({
+    mutationFn: async () => {
+      const headers = Object.fromEntries(
+        form.headers.map((h) => [h.key.trim(), h.value.trim()] as const).filter(([key, value]) => key && value),
+      )
+      const result = await serverSDK().client.provider.models.discover({
+        baseURL: form.baseURL.trim(),
+        apiKey: form.apiKey.trim() || undefined,
+        headers: Object.keys(headers).length ? headers : undefined,
+      })
+      return result.data ?? []
+    },
+    onSuccess: (models) => {
+      setForm("models", mergeModels(form.models, models))
+      showToast({
+        variant: "success",
+        icon: "circle-check",
+        title: language.t("provider.custom.models.fetch.success", { count: models.length }),
+      })
+    },
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : String(err)
+      showToast({ title: language.t("provider.custom.models.fetch.failed"), description: message })
+    },
+  }))
+
   const save = (e: SubmitEvent) => {
     e.preventDefault()
     if (saveMutation.isPending) return
@@ -266,9 +292,23 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
               </div>
             )}
           </For>
-          <Button type="button" size="small" variant="ghost" icon="plus-small" onClick={addModel} class="self-start">
-            {language.t("provider.custom.models.add")}
-          </Button>
+          <div class="flex flex-wrap items-center gap-2">
+            <Button type="button" size="small" variant="ghost" icon="plus-small" onClick={addModel}>
+              {language.t("provider.custom.models.add")}
+            </Button>
+            <Button
+              type="button"
+              size="small"
+              variant="ghost"
+              icon="download"
+              onClick={() => discoverMutation.mutate()}
+              disabled={discoverMutation.isPending || !form.baseURL.trim()}
+            >
+              {discoverMutation.isPending
+                ? language.t("provider.custom.models.fetch.loading")
+                : language.t("provider.custom.models.fetch")}
+            </Button>
+          </div>
         </div>
 
         <div class="flex flex-col gap-3">

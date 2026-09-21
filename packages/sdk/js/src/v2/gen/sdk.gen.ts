@@ -147,6 +147,8 @@ import type {
   ProviderAuthResponses,
   ProviderListErrors,
   ProviderListResponses,
+  ProviderModelsDiscoverErrors,
+  ProviderModelsDiscoverResponses,
   ProviderOauthAuthorizeErrors,
   ProviderOauthAuthorizeResponses,
   ProviderOauthCallbackErrors,
@@ -3198,6 +3200,55 @@ export class Permission extends HeyApiClient {
   }
 }
 
+export class Models extends HeyApiClient {
+  /**
+   * Discover provider models
+   *
+   * Query an OpenAI-compatible provider for the models it exposes so clients can offer them for selection.
+   */
+  public discover<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      baseURL?: string
+      apiKey?: string
+      headers?: {
+        [key: string]: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "baseURL" },
+            { in: "body", key: "apiKey" },
+            { in: "body", key: "headers" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ProviderModelsDiscoverResponses,
+      ProviderModelsDiscoverErrors,
+      ThrowOnError
+    >({
+      url: "/provider/models",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Oauth extends HeyApiClient {
   /**
    * Start OAuth authorization
@@ -3351,6 +3402,11 @@ export class Provider extends HeyApiClient {
       ...options,
       ...params,
     })
+  }
+
+  private _models?: Models
+  get models(): Models {
+    return (this._models ??= new Models({ client: this.client }))
   }
 
   private _oauth?: Oauth
