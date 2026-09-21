@@ -18,4 +18,6 @@ jobs:
         uses: ./.github/actions/setup-bun
 
       - name: Run typecheck
-        run: bun typecheck
+        # turbo.json caps concurrency for memory-constrained dev machines; CI has
+        # the headroom to run one task per available processor instead.
+        run: bun turbo typecheck --concurrency=100%
