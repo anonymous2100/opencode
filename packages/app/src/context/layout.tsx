@@ -73,6 +73,7 @@ type SessionView = {
   pendingMessage?: string
   pendingMessageAt?: number
   todoCollapsed?: boolean
+  todoHidden?: boolean
 }
 
 type TabHandoff = {
@@ -871,6 +872,18 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
                 setStore("sessionView", session, { scroll: {}, todoCollapsed: collapsed })
               } else {
                 setStore("sessionView", session, "todoCollapsed", collapsed)
+              }
+            },
+          },
+          todoHidden: {
+            get: () => s().todoHidden ?? false,
+            set(hidden: boolean) {
+              const session = key()
+              const current = store.sessionView[session]
+              if (!current) {
+                setStore("sessionView", session, { scroll: {}, todoHidden: hidden })
+              } else {
+                setStore("sessionView", session, "todoHidden", hidden)
               }
             },
           },

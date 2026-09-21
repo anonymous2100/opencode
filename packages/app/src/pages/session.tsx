@@ -75,6 +75,7 @@ import { MessageTimeline } from "@/pages/session/timeline/message-timeline"
 import { createTimelineModel } from "@/pages/session/timeline/model"
 import { type DiffStyle, SessionReviewTab, type SessionReviewTabProps } from "@/pages/session/review-tab"
 import { useSessionLayout } from "@/pages/session/session-layout"
+import { SessionPromptAnchors } from "@/pages/session/session-prompt-anchors"
 import { restorePromptModel, syncPromptModel, syncSessionModel } from "@/pages/session/session-model-helpers"
 import {
   clampSessionPanelWidth,
@@ -1684,6 +1685,21 @@ export default function Page() {
     return `[${language.t("common.attachment")}]`
   }
 
+  const promptAnchors = createMemo(() =>
+    visibleUserMessages().map((message, index) => ({
+      id: message.id,
+      index: index + 1,
+      text: line(message.id),
+    })),
+  )
+
+  function jumpToPrompt(id: string) {
+    const message = visibleUserMessages().find((item) => item.id === id)
+    if (!message) return
+    autoScroll.pause()
+    scrollToMessage(message)
+  }
+
   const fail = (err: unknown) => {
     showToast({
       variant: "error",
@@ -2064,7 +2080,7 @@ export default function Page() {
       <Show when={!isDesktop() && !!params.id && settings.general.newLayoutDesigns() && !mobileTabsBottom()}>
         {mobileTabs(true)}
       </Show>
-      <div class="flex-1 min-h-0 overflow-hidden">
+      <div class="flex-1 min-h-0 overflow-hidden relative">
         <Switch>
           <Match when={params.id && mobileChanges()}>
             <div class="relative h-full overflow-hidden">
@@ -2126,6 +2142,13 @@ export default function Page() {
             <NewSessionView worktree={newSessionWorktree()} />
           </Match>
         </Switch>
+        <Show when={!mobileChanges() && promptAnchors().length > 1}>
+          <SessionPromptAnchors
+            items={promptAnchors()}
+            activeID={() => store.messageId}
+            onSelect={jumpToPrompt}
+          />
+        </Show>
       </div>
 
       <Show when={(params.id || !newSessionDesign()) && !mobileChanges()}>
@@ -2140,6 +2163,9 @@ export default function Page() {
             todo: {
               collapsed: () => view().todoCollapsed.get(),
               onToggle: () => view().todoCollapsed.set(!view().todoCollapsed.get()),
+              hidden: () => view().todoHidden.get(),
+              onHide: () => view().todoHidden.set(true),
+              onShow: () => view().todoHidden.set(false),
             },
             followup: () =>
               params.id && !isChildSession()

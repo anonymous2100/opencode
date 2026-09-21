@@ -1,4 +1,5 @@
 import { Show, type JSX } from "solid-js"
+import { Icon } from "@opencode-ai/ui/icon"
 import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
 import { SessionPermissionDock } from "@/pages/session/composer/session-permission-dock"
@@ -18,6 +19,13 @@ export function SessionComposerRegion(props: {
   const rolled = () => {
     const revert = controller.revert()
     return revert?.items.length ? revert : undefined
+  }
+  const todoProgress = () => {
+    const todos = controller.state.todos()
+    return {
+      done: todos.filter((todo) => todo.status === "completed").length,
+      total: todos.length,
+    }
   }
 
   return (
@@ -75,11 +83,36 @@ export function SessionComposerRegion(props: {
                   todos={controller.state.todos()}
                   collapsed={controller.todo.collapsed()}
                   onToggle={controller.todo.onToggle}
+                  onHide={controller.todo.onHide}
                   collapseLabel={language.t("session.todo.collapse")}
                   expandLabel={language.t("session.todo.expand")}
+                  hideLabel={language.t("session.todo.hide")}
                   dockProgress={controller.dockProgress()}
                 />
               </div>
+            </div>
+          </Show>
+          <Show when={controller.todoRestore()}>
+            <div class="flex justify-end pb-2">
+              <button
+                type="button"
+                data-action="session-todo-show"
+                aria-label={language.t("session.todo.show")}
+                classList={{
+                  "flex items-center gap-1.5 rounded-lg border-[0.5px] px-2 py-1 text-[12px] leading-4 cursor-pointer transition-colors":
+                    true,
+                  "border-v2-border-border-base bg-v2-background-bg-layer-01 text-v2-text-text-muted hover:text-v2-text-text-base":
+                    settings.general.newLayoutDesigns(),
+                  "border-border-weak-base bg-background-base text-text-weak hover:text-text-base":
+                    !settings.general.newLayoutDesigns(),
+                }}
+                onClick={controller.todo.onShow}
+              >
+                <Icon name="checklist" size="small" />
+                <span>
+                  {language.t("session.todo.progress", { done: todoProgress().done, total: todoProgress().total })}
+                </span>
+              </button>
             </div>
           </Show>
           <Show

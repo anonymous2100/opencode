@@ -45,8 +45,10 @@ export function SessionTodoDock(props: {
   todos: Todo[]
   collapsed: boolean
   onToggle: () => void
+  onHide: () => void
   collapseLabel: string
   expandLabel: string
+  hideLabel: string
   dockProgress: number
 }) {
   const language = useLanguage()
@@ -177,7 +179,22 @@ export function SessionTodoDock(props: {
               truncate
             />
           </div>
-          <div class="ml-auto">
+          <div class="ml-auto flex items-center gap-1">
+            <IconButton
+              data-action="session-todo-hide"
+              icon="close-small"
+              size="normal"
+              variant="ghost"
+              onMouseDown={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+              }}
+              onClick={(event) => {
+                event.stopPropagation()
+                props.onHide()
+              }}
+              aria-label={props.hideLabel}
+            />
             <IconButton
               data-action="session-todo-toggle-button"
               data-collapsed={props.collapsed ? "true" : "false"}

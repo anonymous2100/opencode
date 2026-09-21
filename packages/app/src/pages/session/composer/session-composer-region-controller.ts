@@ -31,6 +31,9 @@ export function createSessionComposerRegionController(input: {
   todo: {
     collapsed: Accessor<boolean>
     onToggle: () => void
+    hidden: Accessor<boolean>
+    onHide: () => void
+    onShow: () => void
   }
   followup: Accessor<SessionComposerFollowupDock | undefined>
   revert: Accessor<SessionComposerRevertDock | undefined>
@@ -106,7 +109,11 @@ export function createSessionComposerRegionController(input: {
     const id = input.sessionID()
     return id ? sync().session.get(id)?.parentID : undefined
   })
-  const open = createMemo(() => store.ready && input.state.dock() && !input.state.closing())
+  // A hidden todo list collapses the whole dock, so every offset derived from
+  // dockProgress (lift, negative margins) shrinks with it instead of leaving a gap.
+  const open = createMemo(
+    () => store.ready && input.state.dock() && !input.state.closing() && !input.todo.hidden(),
+  )
   const progress = useSpring(
     () => (open() ? 1 : 0),
     { visualDuration: 0.3, bounce: 0 },
@@ -137,6 +144,9 @@ export function createSessionComposerRegionController(input: {
     dock: () => (store.ready && input.state.dock()) || value() > 0.001,
     dockProgress: value,
     dockHeight: () => Math.max(78, store.height),
+    // Only offer a way back while the list would otherwise be showing, and only
+    // once the dock has finished collapsing so the two never fight for space.
+    todoRestore: () => input.todo.hidden() && input.state.dock() && value() < 0.02,
     lift: () => (input.revert()?.items.length ? 18 : 36 * value()),
     setDockBodyRef: (el: HTMLDivElement) => setStore("body", el),
   }
