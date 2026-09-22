@@ -41,7 +41,9 @@ import {
   setBackgroundColor,
   setDockIcon,
   restoreMainWindows,
+  showMainWindows,
 } from "./windows"
+import { createTray, destroyTray } from "./tray"
 import { createWslServersController } from "./wsl/servers"
 import { registerWslIpcHandlers } from "./wsl/ipc"
 import { spawnWslSidecar } from "./wsl/sidecar"
@@ -228,6 +230,7 @@ const main = Effect.gen(function* () {
 
   app.on("will-quit", () => {
     setAppQuitting()
+    destroyTray()
     void stopSidecars()
   })
 
@@ -271,6 +274,7 @@ const main = Effect.gen(function* () {
   app.setAsDefaultProtocolClient("opencode")
   registerRendererProtocol()
   setDockIcon()
+  if (process.platform !== "darwin") createTray()
   const updater = setupAutoUpdater(stopSidecars)
   const menuDeps = {
     trigger: (id: string) => {
@@ -408,12 +412,19 @@ const main = Effect.gen(function* () {
 
   yield* Fiber.await(loadingTask)
 
+  // With close-to-tray, the titlebar button hides windows instead of
+  // destroying them, so this only fires from a real quit or an external
+  // window destruction. Quit then, but leave macOS alone because the dock
+  // keeps the app alive there by convention.
   app.on("window-all-closed", () => {
     if (process.platform === "darwin") return
     app.quit()
   })
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length > 0) return
+    if (BrowserWindow.getAllWindows().length > 0) {
+      showMainWindows()
+      return
+    }
     restoreMainWindows()
   })
 

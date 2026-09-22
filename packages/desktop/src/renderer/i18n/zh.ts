@@ -25,4 +25,9 @@ export const dict = {
   "desktop.cli.failed.message": "无法安装 CLI：{{error}}",
 
   "desktop.error.dev.rootNotFound": "未找到根元素。你是不是忘了把它添加到 index.html？或者 id 属性拼写错了？",
+
+  "desktop.tray.show": "显示 OpenCode",
+  "desktop.tray.hide": "隐藏",
+  "desktop.tray.newWindow": "新建窗口",
+  "desktop.tray.quit": "退出 OpenCode",
 }

@@ -295,6 +295,11 @@ export const DESKTOP_NATIVE_ENGLISH = {
   "desktop.dialog.files": "Files",
   "desktop.server.local": "Local Server",
 
+  "desktop.tray.show": "Show OpenCode",
+  "desktop.tray.hide": "Hide",
+  "desktop.tray.newWindow": "New Window",
+  "desktop.tray.quit": "Quit OpenCode",
+
   "desktop.wsl.error.windowsOnly": "WSL is only available on Windows",
   "desktop.wsl.error.unavailable": "WSL is unavailable",
   "desktop.wsl.error.listInstalled": "Failed to list installed WSL distros",

@@ -45,6 +45,7 @@ protocol.registerSchemesAsPrivileged([
 ])
 
 let backgroundColor: string | undefined
+let quitting = false
 let relaunchHandler = () => {
   setAppQuitting()
   app.relaunch()
@@ -69,8 +70,15 @@ export function setRelaunchHandler(handler: () => void) {
   relaunchHandler = handler
 }
 
-export function setAppQuitting(quitting = true) {
-  registry.setQuitting(quitting)
+export function setAppQuitting(value = true) {
+  registry.setQuitting(value)
+  // Close-to-tray must let a real quit through, including the updater's
+  // quitAndInstall and SIGINT/SIGTERM, which both call this first.
+  quitting = value
+}
+
+export function isAppQuitting() {
+  return quitting
 }
 
 export function setBackgroundColor(color: string) {
@@ -89,9 +97,14 @@ function iconsDir() {
   return app.isPackaged ? join(process.resourcesPath, "icons") : join(root, "../../resources/icons")
 }
 
-function iconPath() {
+export function iconPath() {
   const ext = process.platform === "win32" ? "ico" : "png"
   return join(iconsDir(), `icon.${ext}`)
+}
+
+/** Tray icons render at 16x16; a dedicated small source stays crisp where the window icon would blur. */
+export function smallIconPath() {
+  return join(iconsDir(), "32x32.png")
 }
 
 function tone() {
@@ -157,6 +170,21 @@ export function getLastFocusedWindow() {
 export function restoreMainWindows() {
   const ids = registry.persisted()
   return (ids.length ? ids : [randomUUID()]).map((id) => createMainWindow(id))
+}
+
+/**
+ * Surface the existing windows after close-to-tray has hidden them. Hidden
+ * windows are still registered, so nothing is created here unless every
+ * window really is gone. Returns the visible set for the caller to focus.
+ */
+export function showMainWindows() {
+  const windows = BrowserWindow.getAllWindows().filter((win) => !win.isDestroyed())
+  if (windows.length === 0) return restoreMainWindows()
+  for (const win of windows) {
+    if (win.isMinimized()) win.restore()
+    win.show()
+  }
+  return windows
 }
 
 export function setDockIcon() {
@@ -275,6 +303,15 @@ function registerWindow(win: BrowserWindow, id: string) {
   // Windows never emits before-quit on OS shutdown/logoff, but each window
   // gets session-end before it closes; flag the quit so ids stay persisted.
   win.on("session-end", () => registry.setQuitting())
+  // Close-to-tray: the titlebar button and the app's own Close Window entry
+  // both land here. Hide instead of destroying so the tray keeps the app
+  // reachable, unless something above us is already quitting. macOS is
+  // excluded because its dock already keeps the app alive on last close.
+  win.on("close", (event) => {
+    if (isAppQuitting() || process.platform === "darwin") return
+    event.preventDefault()
+    win.hide()
+  })
   win.on("closed", () => registry.closed(id))
 }
 
