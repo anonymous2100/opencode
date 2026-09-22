@@ -1,0 +1,243 @@
+{
+  "$schema": "https://opencode.ai/theme.json",
+  "defs": {
+    "darkBg": "#262624",
+    "darkPanel": "#30302e",
+    "darkElement": "#3a3936",
+    "darkBorderSubtle": "#4a4945",
+    "darkBorder": "#5f5d57",
+    "darkBorderActive": "#7d7b73",
+    "darkText": "#ffffff",
+    "darkInactive": "#999999",
+    "darkClaude": "#d77757",
+    "darkClaudeShimmer": "#f59575",
+    "darkPermission": "#b1b9f9",
+    "darkPlanMode": "#48968c",
+    "darkSuccess": "#4eba65",
+    "darkError": "#ff6b80",
+    "darkWarning": "#ffc107",
+    "darkKraft": "#d4a27f",
+    "darkDiffAddedBg": "#225c2b",
+    "darkDiffRemovedBg": "#7a2936",
+    "lightBg": "#faf9f5",
+    "lightPanel": "#f2f1eb",
+    "lightElement": "#eae8e0",
+    "lightBorderSubtle": "#e3e1d9",
+    "lightBorder": "#cfccc2",
+    "lightBorderActive": "#b3b0a5",
+    "lightText": "#000000",
+    "lightInactive": "#6b6960",
+    "lightClaude": "#c15f3c",
+    "lightClaudeShimmer": "#a85030",
+    "lightPermission": "#4c56c4",
+    "lightPlanMode": "#1f7a6c",
+    "lightSuccess": "#2c7a39",
+    "lightError": "#ab2b3f",
+    "lightWarning": "#966c1e",
+    "lightKraft": "#8a5a2b",
+    "lightDiffAddedBg": "#dff7e2",
+    "lightDiffRemovedBg": "#fddfe2"
+  },
+  "theme": {
+    "primary": {
+      "dark": "darkClaude",
+      "light": "lightClaude"
+    },
+    "secondary": {
+      "dark": "darkPermission",
+      "light": "lightPermission"
+    },
+    "accent": {
+      "dark": "darkClaudeShimmer",
+      "light": "lightClaudeShimmer"
+    },
+    "error": {
+      "dark": "darkError",
+      "light": "lightError"
+    },
+    "warning": {
+      "dark": "darkWarning",
+      "light": "lightWarning"
+    },
+    "success": {
+      "dark": "darkSuccess",
+      "light": "lightSuccess"
+    },
+    "info": {
+      "dark": "darkPlanMode",
+      "light": "lightPlanMode"
+    },
+    "text": {
+      "dark": "darkText",
+      "light": "lightText"
+    },
+    "textMuted": {
+      "dark": "darkInactive",
+      "light": "lightInactive"
+    },
+    "background": {
+      "dark": "darkBg",
+      "light": "lightBg"
+    },
+    "backgroundPanel": {
+      "dark": "darkPanel",
+      "light": "lightPanel"
+    },
+    "backgroundElement": {
+      "dark": "darkElement",
+      "light": "lightElement"
+    },
+    "border": {
+      "dark": "darkBorder",
+      "light": "lightBorder"
+    },
+    "borderActive": {
+      "dark": "darkBorderActive",
+      "light": "lightBorderActive"
+    },
+    "borderSubtle": {
+      "dark": "darkBorderSubtle",
+      "light": "lightBorderSubtle"
+    },
+    "diffAdded": {
+      "dark": "darkSuccess",
+      "light": "lightSuccess"
+    },
+    "diffRemoved": {
+      "dark": "darkError",
+      "light": "lightError"
+    },
+    "diffContext": {
+      "dark": "darkInactive",
+      "light": "lightInactive"
+    },
+    "diffHunkHeader": {
+      "dark": "darkInactive",
+      "light": "lightInactive"
+    },
+    "diffHighlightAdded": {
+      "dark": "#8fe39a",
+      "light": "#1e6b32"
+    },
+    "diffHighlightRemoved": {
+      "dark": "#ff9dae",
+      "light": "#8e1b2c"
+    },
+    "diffAddedBg": {
+      "dark": "darkDiffAddedBg",
+      "light": "lightDiffAddedBg"
+    },
+    "diffRemovedBg": {
+      "dark": "darkDiffRemovedBg",
+      "light": "lightDiffRemovedBg"
+    },
+    "diffContextBg": {
+      "dark": "darkPanel",
+      "light": "lightPanel"
+    },
+    "diffLineNumber": {
+      "dark": "#7c7a72",
+      "light": "#8f8c82"
+    },
+    "diffAddedLineNumberBg": {
+      "dark": "#1c4a24",
+      "light": "#cfefd5"
+    },
+    "diffRemovedLineNumberBg": {
+      "dark": "#63222d",
+      "light": "#f8cdd3"
+    },
+    "markdownText": {
+      "dark": "darkText",
+      "light": "lightText"
+    },
+    "markdownHeading": {
+      "dark": "darkClaudeShimmer",
+      "light": "lightClaudeShimmer"
+    },
+    "markdownLink": {
+      "dark": "darkClaude",
+      "light": "lightClaude"
+    },
+    "markdownLinkText": {
+      "dark": "darkPlanMode",
+      "light": "lightPlanMode"
+    },
+    "markdownCode": {
+      "dark": "darkSuccess",
+      "light": "lightSuccess"
+    },
+    "markdownBlockQuote": {
+      "dark": "darkWarning",
+      "light": "lightWarning"
+    },
+    "markdownEmph": {
+      "dark": "darkWarning",
+      "light": "lightWarning"
+    },
+    "markdownStrong": {
+      "dark": "darkClaude",
+      "light": "lightClaude"
+    },
+    "markdownHorizontalRule": {
+      "dark": "darkInactive",
+      "light": "lightInactive"
+    },
+    "markdownListItem": {
+      "dark": "darkClaude",
+      "light": "lightClaude"
+    },
+    "markdownListEnumeration": {
+      "dark": "darkPlanMode",
+      "light": "lightPlanMode"
+    },
+    "markdownImage": {
+      "dark": "darkClaude",
+      "light": "lightClaude"
+    },
+    "markdownImageText": {
+      "dark": "darkPlanMode",
+      "light": "lightPlanMode"
+    },
+    "markdownCodeBlock": {
+      "dark": "darkText",
+      "light": "lightText"
+    },
+    "syntaxComment": {
+      "dark": "darkInactive",
+      "light": "lightInactive"
+    },
+    "syntaxKeyword": {
+      "dark": "darkClaudeShimmer",
+      "light": "lightClaudeShimmer"
+    },
+    "syntaxFunction": {
+      "dark": "darkClaude",
+      "light": "lightClaude"
+    },
+    "syntaxVariable": {
+      "dark": "#e8e6df",
+      "light": "#1f1e1d"
+    },
+    "syntaxString": {
+      "dark": "darkSuccess",
+      "light": "lightSuccess"
+    },
+    "syntaxNumber": {
+      "dark": "darkKraft",
+      "light": "lightKraft"
+    },
+    "syntaxType": {
+      "dark": "darkWarning",
+      "light": "lightWarning"
+    },
+    "syntaxOperator": {
+      "dark": "darkPlanMode",
+      "light": "lightPlanMode"
+    },
+    "syntaxPunctuation": {
+      "dark": "darkText",
+      "light": "lightText"
+    }
+  }
+}

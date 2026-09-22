@@ -46,6 +46,7 @@ export {
   catppuccinTheme,
   catppuccinFrappeTheme,
   catppuccinMacchiatoTheme,
+  claudecodeTheme,
   cobalt2Theme,
   cursorTheme,
   draculaTheme,
