@@ -27,7 +27,14 @@
   写进产物的版本号，默认读取 packages/opencode/package.json 的 version。
 
 .PARAMETER Channel
-  写入 OPENCODE_CHANNEL，默认 dev（产物名 OpenCode Dev）。
+  写入 OPENCODE_CHANNEL，默认 prod（产物名 OpenCode，正式图标）。
+  可选 dev / beta / prod；dev 为开发渠道（蓝色图标，产物名 OpenCode Dev）。
+
+.PARAMETER SidecarCli
+  prod / beta 渠道下，把指定版本的 opencode CLI 从 npm 装进
+  resources\opencode-cli.exe 一起打包。留空则使用运行时的默认值。
+  说明：正式构建里 CLI 是随包分发的，而 dev 渠道会下载 next 快照版；
+  本地想复刻正式包行为时，传 -SidecarCli <版本号，如 1.18.33>。
 
 .PARAMETER Mirror
   electron / electron-builder-binaries 的下载镜像根地址。传空字符串则用官方源。
@@ -50,8 +57,12 @@
   powershell -ExecutionPolicy Bypass -File .\package-desktop.ps1
 
 .EXAMPLE
-  # 指定版本与正式渠道
-  powershell -ExecutionPolicy Bypass -File .\package-desktop.ps1 -Version 1.18.34 -Channel prod
+  # 正式包，并把本轮版本的 CLI 一起内嵌
+  powershell -ExecutionPolicy Bypass -File .\package-desktop.ps1 -SidecarCli 1.18.33
+
+.EXAMPLE
+  # 开发渠道（蓝色图标）
+  powershell -ExecutionPolicy Bypass -File .\package-desktop.ps1 -Channel dev
 
 .EXAMPLE
   # 上次已构建完，只重新打包（保留产物，不清理）
@@ -60,7 +71,8 @@
 [CmdletBinding()]
 param(
   [string]$Version,
-  [ValidateSet("dev", "beta", "prod")][string]$Channel = "dev",
+  [ValidateSet("dev", "beta", "prod")][string]$Channel = "prod",
+  [string]$SidecarCli,
   [string]$Mirror = "https://registry.npmmirror.com",
   [switch]$Force,
   [switch]$SkipClean,
@@ -210,6 +222,31 @@ try {
     Log ">>> prepare  [已跳过]"
   } else {
     Invoke-Step "prepare" $desktopDir { bun ./scripts/prepare.ts }
+  }
+
+  # ---------- 2.5 内嵌指定版本 CLI（prod / beta 渠道） ----------
+  # 正式包把 CLI 一起分发；dev 渠道的 prepare 只会塞入 next 快照版，
+  # 因此本地复刻正式包时需要显式装一个发布版本。
+  if (-not $SidecarCli) {
+    Log ">>> 内嵌 CLI  [未指定 -SidecarCli]"
+  } elseif ($Channel -eq "dev") {
+    Log ">>> 内嵌 CLI  [dev 渠道由 prepare 下载快照版，忽略 -SidecarCli]"
+  } else {
+    $cliExe = Join-Path $desktopDir "resources\opencode-cli.exe"
+    $cliTmp = Join-Path $env:TEMP ("opencode-cli-" + [System.Guid]::NewGuid().ToString("N"))
+    New-Item -ItemType Directory -Path $cliTmp -Force | Out-Null
+    try {
+      Invoke-Step "下载 CLI $SidecarCli" $cliTmp {
+        bun add --no-save --exact --os=win32 --cpu=x64 "opencode-ai@$SidecarCli"
+      }
+      $src = Join-Path $cliTmp "node_modules\opencode-ai\bin\opencode.exe"
+      if (-not (Test-Path -LiteralPath $src)) { throw "未在 opencode-ai@$SidecarCli 中找到 Windows CLI 二进制" }
+      Copy-Item -LiteralPath $src -Destination $cliExe -Force
+      $sizeMB = [math]::Round((Get-Item -LiteralPath $cliExe).Length / 1MB, 1)
+      Log "  内嵌 CLI <- $src (${sizeMB}MB)"
+    } finally {
+      if (Test-Path -LiteralPath $cliTmp) { Remove-Tree $cliTmp | Out-Null }
+    }
   }
 
   # ---------- 3. 渲染进程 / 主进程构建 ----------
