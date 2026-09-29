@@ -55,8 +55,15 @@ const getBase = (appId: string): Configuration => ({
   extraMetadata: {
     desktopName: `${appId}.desktop`,
   },
-  files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*"],
+  files: ["out/**/*", "resources/**/*", "!resources/opencode-cli*", "!resources/icons/**/*"],
   extraResources: [
+    // Packaged code resolves icons from `process.resourcesPath/icons`, so they
+    // must ship as extra resources rather than inside app.asar. `files` keeps
+    // the source copy out of the archive to avoid shipping them twice.
+    {
+      from: "resources/icons",
+      to: "icons",
+    },
     ...(channel === "dev"
       ? [
           {
