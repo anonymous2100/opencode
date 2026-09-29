@@ -35,6 +35,14 @@
 .PARAMETER Force
   node_modules 已存在时也强制 bun install。
 
+.PARAMETER SkipClean
+  跳过构建产物清理。默认会先删除上一次的 dist / out /
+  packages/opencode/dist 以及遗留日志，保证产物是全新构建的。
+
+.PARAMETER KeepLogs
+  清理时保留旧日志文件（默认一并删除 build-desktop.log、
+  packages/desktop/*.log 等历史日志）。
+
 .PARAMETER SkipInstall / SkipPrepare / SkipBuild / SkipPackage
   跳过对应阶段，用于断点续跑。
 
@@ -46,8 +54,8 @@
   powershell -ExecutionPolicy Bypass -File .\package-desktop.ps1 -Version 1.18.34 -Channel prod
 
 .EXAMPLE
-  # 上次已构建完，只重新打包
-  powershell -ExecutionPolicy Bypass -File .\package-desktop.ps1 -SkipInstall -SkipPrepare -SkipBuild
+  # 上次已构建完，只重新打包（保留产物，不清理）
+  powershell -ExecutionPolicy Bypass -File .\package-desktop.ps1 -SkipClean -SkipInstall -SkipPrepare -SkipBuild
 #>
 [CmdletBinding()]
 param(
@@ -55,6 +63,8 @@ param(
   [ValidateSet("dev", "beta", "prod")][string]$Channel = "dev",
   [string]$Mirror = "https://registry.npmmirror.com",
   [switch]$Force,
+  [switch]$SkipClean,
+  [switch]$KeepLogs,
   [switch]$SkipInstall,
   [switch]$SkipPrepare,
   [switch]$SkipBuild,
@@ -63,6 +73,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $ProgressPreference = "SilentlyContinue"
+# 原生工具（electron-builder 等）按 UTF-8 输出，PS 5.1 默认用控制台代码页解码会乱码。
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 $Root = if ($PSScriptRoot) { $PSScriptRoot } else { (Get-Location).Path }
 $Root = (Resolve-Path -LiteralPath $Root).Path
@@ -106,6 +118,22 @@ function Invoke-Step {
   Log "<<< $Name 完成 耗时 $([math]::Round($sw.Elapsed.TotalSeconds,1))s"
 }
 
+# 删除目录或文件，容忍长路径与只读项；返回是否已不存在。
+function Remove-Tree {
+  param([string]$Path)
+  if (-not (Test-Path -LiteralPath $Path)) { return $true }
+  try {
+    Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction Stop
+  } catch {
+    if (Test-Path -LiteralPath $Path -PathType Container) {
+      cmd /c "rmdir /s /q `"$Path`"" 2>&1 | Out-Null
+    } else {
+      cmd /c "del /f /q `"$Path`"" 2>&1 | Out-Null
+    }
+  }
+  return -not (Test-Path -LiteralPath $Path)
+}
+
 Set-Content -LiteralPath $logFile -Value "=== package start $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') root=$Root ===" -Encoding UTF8
 Set-Location $Root
 
@@ -131,6 +159,40 @@ try {
   }
   $env:OPENCODE_VERSION = $Version
   $env:OPENCODE_CHANNEL = $Channel
+
+  # ---------- 0.5 清理旧产物 ----------
+  if ($SkipClean) {
+    Log ">>> 清理旧产物  [已跳过]"
+  } else {
+    Log ">>> 清理旧产物"
+    $cleanDirs = @(
+      (Join-Path $desktopDir "dist"),
+      (Join-Path $desktopDir "out"),
+      (Join-Path $desktopDir "resources\opencode-cli.exe"),
+      (Join-Path $Root "packages\opencode\dist")
+    )
+    $cleanLogs = if ($KeepLogs) { @() } else { @(
+      (Join-Path $Root "build-desktop.log"),
+      (Join-Path $desktopDir "p.log"),
+      (Join-Path $desktopDir "pkg.log"),
+      (Join-Path $desktopDir "build.log"),
+      (Join-Path $desktopDir "package.log"),
+      (Join-Path $desktopDir "dist.log")
+    )}
+    $freed = 0
+    foreach ($t in ($cleanDirs + $cleanLogs)) {
+      if (-not (Test-Path -LiteralPath $t)) { continue }
+      if (Test-Path -LiteralPath $t -PathType Container) {
+        $size = (Get-ChildItem -LiteralPath $t -Recurse -Force -File -ErrorAction SilentlyContinue | Measure-Object Length -Sum).Sum
+        if ($size) { $freed += $size }
+      } else {
+        $freed += (Get-Item -LiteralPath $t -Force).Length
+      }
+      $ok = Remove-Tree $t
+      Log ("  {0} {1}" -f $(if ($ok) { "已删除" } else { "删除失败" }), $t.Substring($Root.Length).TrimStart('\'))
+    }
+    Log ("  释放 {0}MB" -f [math]::Round($freed / 1MB, 1))
+  }
 
   # ---------- 1. 依赖（仅在缺失或 -Force 时安装） ----------
   $nm = Join-Path $Root "node_modules"
@@ -176,6 +238,7 @@ try {
     $entries = @(Get-ChildItem (Join-Path $desktopDir "dist") -Force -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
     Log "!!! 未生成安装包，dist 内容: $($entries -join ', ')"
     if (-not $SkipPackage) { throw "未找到产物 $exe" }
+    Log "  （-SkipPackage 已指定，视为正常）"
   }
 } catch {
   $failed = $true
