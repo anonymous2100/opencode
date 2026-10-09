@@ -62,7 +62,7 @@
 
 .EXAMPLE
   # 正式包，显式指定要内嵌的 CLI 版本
-  powershell -ExecutionPolicy Bypass -File .\package-desktop.ps1 -SidecarCli 1.18.33
+  powershell -ExecutionPolicy Bypass -File .\package-desktop.ps1 -SidecarCli 1.18.35
 
 .EXAMPLE
   # 不内嵌 CLI（产物需要外部 CLI 才能连上后端）
