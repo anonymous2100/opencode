@@ -24,6 +24,7 @@ export type ProjectSidebarContext = {
   onProjectFocus: (worktree: string) => void
   onHoverOpenChanged: (worktree: string, hovered: boolean) => void
   navigateToProject: (directory: string) => void
+  navigateToNewSession: (directory: string) => void
   openSidebar: () => void
   closeProject: (directory: string) => void
   showEditProjectDialog: (project: LocalProject) => void

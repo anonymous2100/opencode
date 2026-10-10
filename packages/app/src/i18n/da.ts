@@ -774,6 +774,9 @@ export const dict = {
   "sidebar.project.recentSessions": "Seneste sessioner",
   "sidebar.project.viewAllSessions": "Vis alle sessioner",
   "sidebar.project.clearNotifications": "Ryd notifikationer",
+  "sidebar.project.pin": "Pin project",
+  "sidebar.project.unpin": "Unpin project",
+  "sidebar.project.expand": "Show more",
   "sidebar.empty.title": "Ingen åbne projekter",
   "sidebar.empty.description": "Åbn et projekt for at komme i gang",
 

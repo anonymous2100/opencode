@@ -959,6 +959,9 @@ export const dict = {
   "sidebar.project.recentSessions": "Sesi terbaru",
   "sidebar.project.viewAllSessions": "Lihat semua sesi",
   "sidebar.project.clearNotifications": "Hapus notifikasi",
+  "sidebar.project.pin": "Pin project",
+  "sidebar.project.unpin": "Unpin project",
+  "sidebar.project.expand": "Show more",
   "sidebar.empty.title": "Tidak ada proyek terbuka",
   "sidebar.empty.description": "Buka proyek untuk memulai",
 

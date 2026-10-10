@@ -56,6 +56,8 @@ const names = [
   "eye",
   "enter",
   "folder",
+  "pin",
+  "pin-off",
   "file-tree",
   "file-tree-active",
   "magnifying-glass",

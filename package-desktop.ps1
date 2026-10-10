@@ -138,20 +138,37 @@ function Invoke-Step {
   Log "<<< $Name 完成 耗时 $([math]::Round($sw.Elapsed.TotalSeconds,1))s"
 }
 
-# 删除目录或文件，容忍长路径与只读项；返回是否已不存在。
+# 删除目录或文件，容忍长路径、只读项与占用重试；始终不抛异常，返回是否已不存在。
+# 注意：调用方可能处于 $ErrorActionPreference = "Stop"（脚本顶层即如此），
+# 因此这里必须自己把偏好改成 Continue，否则删除失败会把整个打包流程中断。
 function Remove-Tree {
   param([string]$Path)
-  if (-not (Test-Path -LiteralPath $Path)) { return $true }
+  $pref = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
   try {
-    Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction Stop
-  } catch {
+    if (-not (Test-Path -LiteralPath $Path)) { return $true }
+    # bun 下载的 opencode.exe 带 hidden/system 属性，直接删除会报「访问被拒绝」，
+    # 必须先清掉属性。
     if (Test-Path -LiteralPath $Path -PathType Container) {
-      cmd /c "rmdir /s /q `"$Path`"" 2>&1 | Out-Null
+      cmd /c "attrib -r -h -s /s /d `"$Path\*`"" 2>&1 | Out-Null
     } else {
-      cmd /c "del /f /q `"$Path`"" 2>&1 | Out-Null
+      cmd /c "attrib -r -h -s `"$Path`"" 2>&1 | Out-Null
     }
+    for ($i = 1; $i -le 3; $i++) {
+      Remove-Item -LiteralPath $Path -Recurse -Force -ErrorAction SilentlyContinue
+      if (-not (Test-Path -LiteralPath $Path)) { return $true }
+      if (Test-Path -LiteralPath $Path -PathType Container) {
+        cmd /c "rmdir /s /q `"$Path`"" 2>&1 | Out-Null
+      } else {
+        cmd /c "del /f /q `"$Path`"" 2>&1 | Out-Null
+      }
+      if (-not (Test-Path -LiteralPath $Path)) { return $true }
+      Start-Sleep -Milliseconds 500
+    }
+    return $false
+  } finally {
+    $ErrorActionPreference = $pref
   }
-  return -not (Test-Path -LiteralPath $Path)
 }
 
 Set-Content -LiteralPath $logFile -Value "=== package start $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') root=$Root ===" -Encoding UTF8

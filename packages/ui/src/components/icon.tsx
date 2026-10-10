@@ -37,6 +37,8 @@ const icons = {
   eye: `<path d="M10 4.58325C5.83333 4.58325 2.5 9.99992 2.5 9.99992C2.5 9.99992 5.83333 15.4166 10 15.4166C14.1667 15.4166 17.5 9.99992 17.5 9.99992C17.5 9.99992 14.1667 4.58325 10 4.58325Z" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="10" r="2.5" stroke="currentColor"/>`,
   enter: `<path d="M5.83333 15.8334L2.5 12.5L5.83333 9.16671M3.33333 12.5H17.9167V4.58337H10" stroke="currentColor" stroke-linecap="square"/>`,
   folder: `<path d="M2.08301 2.91675V16.2501H17.9163V5.41675H9.99967L8.33301 2.91675H2.08301Z" stroke="currentColor" stroke-linecap="round"/>`,
+  pin: `<path d="M7.5 2.5H12.5M8.33333 2.5V8.33333L5.83333 10.8333H14.1667L11.6667 8.33333V2.5M10 10.8333V17.5" stroke="currentColor" stroke-linecap="square"/>`,
+  "pin-off": `<path d="M7.5 2.5H12.5M8.33333 2.5V8.33333L5.83333 10.8333H14.1667L11.6667 8.33333V2.5M10 10.8333V17.5M3.75 3.75L16.25 16.25" stroke="currentColor" stroke-linecap="square"/>`,
   "file-tree": `<path d="M18 18V5H9.5L7.5 2H2L2 18H5M18 18H5M18 18V8.5H5V18" stroke="currentColor" stroke-linecap="square"/>`,
   "file-tree-active": `<path d="M2 2L2 18H5L6.5 8.5H18V5H9.5L7.5 2H2Z" fill="currentColor" fill-opacity="0.1"/>
 <path d="M5 18H18L19.5 8.5H18M5 18H2L2 2H7.5L9.5 5H18V8.5M5 18L6.5 8.5H18" stroke="currentColor" stroke-linecap="square"/>`,

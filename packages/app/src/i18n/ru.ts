@@ -900,6 +900,9 @@ export const dict = {
   "sidebar.project.recentSessions": "Недавние сессии",
   "sidebar.project.viewAllSessions": "Посмотреть все сессии",
   "sidebar.project.clearNotifications": "Очистить уведомления",
+  "sidebar.project.pin": "Pin project",
+  "sidebar.project.unpin": "Unpin project",
+  "sidebar.project.expand": "Show more",
   "sidebar.empty.title": "Нет открытых проектов",
   "sidebar.empty.description": "Откройте проект, чтобы начать",
 

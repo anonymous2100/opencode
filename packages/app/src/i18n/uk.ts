@@ -972,6 +972,9 @@ export const dict = {
   "sidebar.project.recentSessions": "Нещодавні сесії",
   "sidebar.project.viewAllSessions": "Переглянути всі сесії",
   "sidebar.project.clearNotifications": "Очистити сповіщення",
+  "sidebar.project.pin": "Pin project",
+  "sidebar.project.unpin": "Unpin project",
+  "sidebar.project.expand": "Show more",
   "sidebar.empty.title": "Немає відкритих проєктів",
   "sidebar.empty.description": "Відкрийте проєкт, щоб почати",
 

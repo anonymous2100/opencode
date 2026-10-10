@@ -15,6 +15,7 @@ import { useNotification } from "@/context/notification"
 import { usePermission } from "@/context/permission"
 import { messageAgentColor } from "@/utils/agent"
 import { sessionTitle } from "@/utils/session-title"
+import { getRelativeTime } from "@/utils/time"
 import { sessionPermissionRequest } from "../session/composer/session-request-tree"
 import { childSessionOnPath, getProjectAvatarSource, hasProjectPermissions } from "./helpers"
 
@@ -81,6 +82,7 @@ export type SessionItemProps = {
   mobile?: boolean
   dense?: boolean
   showTooltip?: boolean
+  showTime?: boolean
   showChild?: boolean
   level?: number
   sidebarExpanded: Accessor<boolean>
@@ -99,6 +101,7 @@ const SessionRow = (props: {
   hasPermissions: Accessor<boolean>
   hasError: Accessor<boolean>
   unseenCount: Accessor<number>
+  time: Accessor<string | undefined>
   clearHoverProjectSoon: () => void
   sidebarOpened: Accessor<boolean>
   warmPress: () => void
@@ -139,6 +142,13 @@ const SessionRow = (props: {
         </div>
       </Show>
       <span class="text-14-regular text-text-strong min-w-0 flex-1 truncate">{title()}</span>
+      <Show when={props.time()}>
+        {(value) => (
+          <span class="shrink-0 text-12-regular text-text-weak group-hover/session:hidden group-focus-within/session:hidden">
+            {value()}
+          </span>
+        )}
+      </Show>
     </A>
   )
 }
@@ -172,6 +182,11 @@ export const SessionItem = (props: SessionItemProps): JSX.Element => {
     messageAgentColor(serverSync().session.data.message[props.session.id], sessionStore.agent),
   )
   const tooltip = createMemo(() => props.showTooltip ?? (props.mobile || !props.sidebarExpanded()))
+  const time = createMemo(() => {
+    if (!props.showTime || props.dense) return
+    const updated = props.session.time.updated ?? props.session.time.created
+    return getRelativeTime(new Date(updated).toISOString(), language.t)
+  })
   const currentChild = createMemo(() => {
     if (!props.showChild) return
     return childSessionOnPath(sessionStore.session, props.session.id, params.id)
@@ -208,6 +223,7 @@ export const SessionItem = (props: SessionItemProps): JSX.Element => {
       hasPermissions={hasPermissions}
       hasError={hasError}
       unseenCount={unseenCount}
+      time={time}
       clearHoverProjectSoon={props.clearHoverProjectSoon}
       sidebarOpened={layout.sidebar.opened}
       warmPress={() => warm(2, "high")}

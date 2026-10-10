@@ -880,6 +880,9 @@ export const dict = {
   "sidebar.project.recentSessions": "最近会话",
   "sidebar.project.viewAllSessions": "查看全部会话",
   "sidebar.project.clearNotifications": "清除通知",
+  "sidebar.project.pin": "置顶项目",
+  "sidebar.project.unpin": "取消置顶",
+  "sidebar.project.expand": "展开显示",
   "sidebar.empty.title": "没有打开的项目",
   "sidebar.empty.description": "打开一个项目以开始使用",
 

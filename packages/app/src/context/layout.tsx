@@ -277,6 +277,7 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
           width: DEFAULT_SIDEBAR_WIDTH,
           workspaces: {} as Record<string, boolean>,
           workspacesDefault: false,
+          pinned: [] as string[],
         },
         terminal: {
           height: DEFAULT_TERMINAL_HEIGHT,
@@ -684,6 +685,18 @@ export const { use: useLayout, provider: LayoutProvider } = createSimpleContext(
         toggleWorkspaces(directory: string) {
           const current = store.sidebar.workspaces[directory] ?? store.sidebar.workspacesDefault ?? false
           setStore("sidebar", "workspaces", directory, !current)
+        },
+        pinned(directory: string) {
+          return store.sidebar.pinned.includes(pathKey(directory))
+        },
+        togglePinned(directory: string) {
+          const key = pathKey(directory)
+          const current = store.sidebar.pinned
+          setStore(
+            "sidebar",
+            "pinned",
+            current.includes(key) ? current.filter((item) => item !== key) : [...current, key],
+          )
         },
       },
       terminal: {
