@@ -75,10 +75,7 @@ export function SidebarProjects() {
 
   const foldAll = () => {
     const collapse = anyExpanded()
-    setState(
-      "collapsed",
-      Object.fromEntries(groups().map((group) => [group.key, collapse])),
-    )
+    setState("collapsed", Object.fromEntries(groups().map((group) => [group.key, collapse])))
   }
 
   // A folder that is not a project yet becomes one when a draft opens there, so this starts a draft per chosen folder.
@@ -98,14 +95,22 @@ export function SidebarProjects() {
   }
 
   // Rows the sidebar would walk: projects in list order, and only the sessions their fold currently shows.
+  const selectedKey = createMemo(() => inbox.entries().find(inbox.selected)?.key)
+
   const visibleSessions = createMemo(() =>
-    groups().flatMap((group) =>
-      state.collapsed[group.key]
-        ? []
-        : state.expanded[group.key]
-          ? group.sessions
-          : group.sessions.slice(0, PROJECT_SESSION_LIMIT),
-    ),
+    groups().flatMap((group) => {
+      if (state.collapsed[group.key]) return []
+
+      if (state.expanded[group.key]) return group.sessions
+
+      const slice = group.sessions.slice(0, PROJECT_SESSION_LIMIT)
+      const selected = selectedKey()
+
+      if (!selected || slice.some((entry) => entry.key === selected)) return slice
+      const entry = group.sessions.find((item) => item.key === selected)
+
+      return entry ? [...slice, entry] : slice
+    }),
   )
 
   const selectAdjacent = (offset: -1 | 1, include?: (entry: InboxEntry) => boolean) => {
@@ -160,8 +165,6 @@ export function SidebarProjects() {
     onCleanup(() => setSidebarUnread(false))
   })
 
-  const selectedKey = createMemo(() => inbox.entries().find(inbox.selected)?.key)
-
   // Opening a session from elsewhere can land in a folded project, so reveal its row before scrolling to it. Only a
   // selection change expands the group; collapsing the selected project by hand stays collapsed.
   createEffect((previous: string | undefined) => {
@@ -186,8 +189,10 @@ export function SidebarProjects() {
     if (!key) return
 
     const frame = requestAnimationFrame(() => {
+      // Entry keys join the server and session with a NUL; encode it so the attribute survives the DOM.
+      const encoded = encodeURIComponent(key)
       const row = [...root.querySelectorAll<HTMLElement>("[data-entry-key]")].find(
-        (element) => element.dataset.entryKey === key,
+        (element) => element.dataset.entryKey === encoded,
       )
 
       row?.scrollIntoView({ block: "nearest" })
@@ -219,12 +224,7 @@ export function SidebarProjects() {
             data-action="sidebar-projects-refresh"
             variant="ghost-muted"
             size="small"
-            icon={
-              <Icon
-                name="refresh"
-                class={refreshing() ? "animate-spin motion-reduce:animate-none" : undefined}
-              />
-            }
+            icon={<Icon name="refresh" class={refreshing() ? "animate-spin motion-reduce:animate-none" : undefined} />}
             aria-label={language.t("sidebar.projects.refresh")}
             onClick={() => void refresh()}
           />
@@ -339,9 +339,17 @@ function ProjectSection(props: {
   const name = createMemo(() => displayName(props.group.project))
   const count = createMemo(() => props.group.sessions.length)
 
-  const shown = createMemo(() =>
-    props.expanded ? props.group.sessions : props.group.sessions.slice(0, PROJECT_SESSION_LIMIT),
-  )
+  const shown = createMemo(() => {
+    if (props.expanded) return props.group.sessions
+
+    const slice = props.group.sessions.slice(0, PROJECT_SESSION_LIMIT)
+
+    // Keep the open session in view when it is older than the rows this fold shows.
+    if (!props.selectedKey || slice.some((entry) => entry.key === props.selectedKey)) return slice
+    const selected = props.group.sessions.find((entry) => entry.key === props.selectedKey)
+
+    return selected ? [...slice, selected] : slice
+  })
 
   const unread = createMemo(() => {
     const directories = [props.group.project.worktree, ...(props.group.project.sandboxes ?? [])]
@@ -352,7 +360,13 @@ function ProjectSection(props: {
   const tag = createMemo(() => props.servers.tag(props.group.conn))
 
   return (
-    <div data-slot="sidebar-projects-group" data-project={name()} class="flex min-w-0 shrink-0 flex-col">
+    <div
+      data-slot="sidebar-projects-group"
+      data-project={name()}
+      data-active={props.active ? "" : undefined}
+      data-collapsed={props.collapsed ? "" : undefined}
+      class="flex min-w-0 shrink-0 flex-col"
+    >
       <div
         class="group/project relative flex h-8 min-w-0 items-center rounded-[6px] transition-colors"
         classList={{
@@ -370,10 +384,7 @@ function ProjectSection(props: {
         >
           {/* The folder glyph carries the fold state, as the name does in a file tree. */}
           <span class="flex size-4 shrink-0 items-center justify-center text-v2-icon-icon-muted">
-            <Show
-              when={props.group.project.icon}
-              fallback={<Icon name={props.collapsed ? "folder" : "folder-open"} />}
-            >
+            <Show when={props.group.project.icon} fallback={<Icon name={props.collapsed ? "folder" : "folder-open"} />}>
               <ProjectAvatar
                 aria-hidden="true"
                 fallback={name()}
@@ -495,7 +506,7 @@ function ProjectSessionRow(props: {
         as="button"
         type="button"
         data-slot="sidebar-project-session"
-        data-entry-key={props.entry.key}
+        data-entry-key={encodeURIComponent(props.entry.key)}
         data-session-id={props.entry.session.id}
         data-status={status()}
         data-selected={props.selected ? "" : undefined}
