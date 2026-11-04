@@ -58,6 +58,7 @@ export type IconName =
   | "flask"
   | "folder"
   | "folder-add-left"
+  | "folder-open"
   | "fork"
   | "github"
   | "glasses"

@@ -756,6 +756,14 @@ export const dict = {
   "sidebar.inbox.time.now": "now",
   "sidebar.project.recentSessions": "Recent sessions",
   "sidebar.project.clearNotifications": "Clear notifications",
+  "sidebar.projects.title": "Projects",
+  "sidebar.projects.empty": "No sessions yet",
+  "sidebar.projects.expand": "Expand project",
+  "sidebar.projects.collapse": "Collapse project",
+  "sidebar.projects.showLess": "Show less",
+  "sidebar.projects.refresh": "Refresh sessions",
+  "sidebar.projects.foldAll": "Collapse all projects",
+  "sidebar.projects.unfoldAll": "Expand all projects",
 
   "settings.section.server": "Server",
   "settings.backToApp": "Back to app",
@@ -841,6 +849,9 @@ export const dict = {
   "settings.general.row.interfaceMode.top.description": "Browser-style tabs across the top of the window.",
   "settings.general.row.interfaceMode.side": "Side tabs",
   "settings.general.row.interfaceMode.side.description": "Browser-style tabs in a sidebar.",
+  "settings.general.row.interfaceMode.projects": "Projects",
+  "settings.general.row.interfaceMode.projects.description":
+    "Recent sessions grouped by project in a sidebar, with new sessions a click away.",
   "settings.general.row.interfaceMode.inbox": "Inbox",
   "settings.general.row.interfaceMode.inbox.description":
     "Every session across your servers, sorted by what needs you next.",

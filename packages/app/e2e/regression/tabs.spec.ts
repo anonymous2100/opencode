@@ -1356,3 +1356,84 @@ async function emptySidePanel(page: Page) {
 
   return { beta, alphaTab: page.locator(`[data-titlebar-tab-slot]:has(a[href="${sessionHref(alpha.id)}"])`) }
 }
+
+test("the projects sidebar groups recent sessions by project and folds each group", async ({ page }) => {
+  const directory = (name: string) => `C:/OpenCode/${name}`
+  const uppServer = project({ id: "proj_upp_server", directory: directory("upp-server"), name: "upp-server" })
+
+  const merchant = project({
+    id: "proj_upp_frontend_merchant",
+    directory: directory("upp-frontend-merchant"),
+    name: "upp-frontend-merchant",
+  })
+
+  const manager = project({
+    id: "proj_upp_frontend_manager",
+    directory: directory("upp-frontend-manager"),
+    name: "upp-frontend-manager",
+  })
+
+  const serverSessions = Array.from({ length: 8 }, (_, index) =>
+    session({
+      id: `ses_upp_server_${index}`,
+      title: `Server session ${index}`,
+      directory: uppServer.worktree,
+      projectID: uppServer.id,
+      created: 1_700_000_010_000 + index,
+    }),
+  )
+
+  const merchantSession = session({
+    id: "ses_upp_merchant_1",
+    title: "Merchant session",
+    directory: merchant.worktree,
+    projectID: merchant.id,
+    created: 1_700_000_000_000,
+  })
+
+  await mockWorkspace(page, {
+    name: "ProjectsSidebar",
+    sessions: [...serverSessions, merchantSession],
+    projects: [uppServer, merchant, manager],
+    seed: {
+      usedProjects: { local: [uppServer.id, merchant.id, manager.id] },
+      settings: { appearance: { tabLayout: "projects", sidebarOpen: true } },
+    },
+  })
+  await page.goto("/")
+
+  const sidebar = page.locator('[data-slot="vertical-tabs-sidebar"]')
+  const groups = sidebar.locator('[data-slot="sidebar-projects-group"]')
+  const projectGroup = (name: string) => groups.filter({ hasText: name })
+  await expect(sidebar).toBeVisible()
+  await expect(groups).toHaveCount(3)
+
+  // The project with the newest session leads; projects without sessions follow in used order.
+  const server = projectGroup("upp-server")
+  const merchantGroup = projectGroup("upp-frontend-merchant")
+  const managerGroup = projectGroup("upp-frontend-manager")
+  await expect(groups.nth(0)).toContainText("upp-server")
+  await expect(server.locator('[data-slot="sidebar-project-session"]')).toHaveCount(6)
+  await expect(merchantGroup.locator('[data-slot="sidebar-project-session"]')).toHaveCount(1)
+  await expect(managerGroup.locator('[data-slot="sidebar-project-session"]')).toHaveCount(0)
+
+  await server.getByRole("button", { name: "Show more", exact: true }).click()
+  await expect(server.locator('[data-slot="sidebar-project-session"]')).toHaveCount(8)
+  await server.getByRole("button", { name: "Show less", exact: true }).click()
+  await expect(server.locator('[data-slot="sidebar-project-session"]')).toHaveCount(6)
+
+  await server.locator('[data-action="sidebar-project-toggle"]').click()
+  await expect(server.locator('[data-slot="sidebar-project-session"]')).toHaveCount(0)
+  await server.locator('[data-action="sidebar-project-toggle"]').click()
+  await expect(server.locator('[data-slot="sidebar-project-session"]')).toHaveCount(6)
+
+  await merchantGroup.getByRole("button", { name: /Merchant session/ }).click()
+  await expectPath(page, sessionHref(merchantSession.id))
+  await expect(merchantGroup.locator('[data-slot="sidebar-project-session"][data-selected]')).toHaveAttribute(
+    "data-session-id",
+    merchantSession.id,
+  )
+
+  await server.getByRole("button", { name: "New session", exact: true }).click()
+  await expect(page).toHaveURL(/\/new-session\?draftId=/)
+})

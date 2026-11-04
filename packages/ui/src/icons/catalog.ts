@@ -30,6 +30,10 @@ const icons = {
     viewBox: "0 0 16 16",
     body: `<path d="M1.33337 2V13.3333H14.6667V4H8.66671L6.66671 2H1.33337Z" stroke="currentColor" stroke-miterlimit="10" stroke-linecap="square"/>`,
   },
+  "folder-open": {
+    viewBox: "0 0 16 16",
+    body: `<path d="M1.33337 13.3333V2H6.66671L8.66671 4H14.6667V6.66667" stroke="currentColor" stroke-miterlimit="10" stroke-linecap="square"/><path d="M1.33337 13.3333H12.6667L14.6667 6.66667H3.33337L1.33337 13.3333Z" stroke="currentColor" stroke-miterlimit="10" stroke-linecap="square"/>`,
+  },
   branch: {
     viewBox: "0 0 16 16",
     body: `<path d="M5.118 5.686V10.314M5.118 5.686C5.97 5.686 6.661 4.995 6.661 4.143C6.661 3.291 5.97 2.6 5.118 2.6C4.266 2.6 3.575 3.291 3.575 4.143C3.575 4.995 4.266 5.686 5.118 5.686ZM5.118 10.314C4.266 10.314 3.575 11.005 3.575 11.857C3.575 12.709 4.266 13.4 5.118 13.4C5.97 13.4 6.661 12.709 6.661 11.857M5.118 10.314C5.97 10.314 6.661 11.005 6.661 11.857M10.882 5.686C11.734 5.686 12.425 4.995 12.425 4.143C12.425 3.291 11.734 2.6 10.882 2.6C10.03 2.6 9.339 3.291 9.339 4.143C9.339 4.995 10.03 5.686 10.882 5.686ZM10.882 5.686V9.457C10.882 10.783 9.807 11.857 8.482 11.857H6.661" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"/>`,

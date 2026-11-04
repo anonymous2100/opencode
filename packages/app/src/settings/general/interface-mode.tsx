@@ -6,6 +6,7 @@ import "./interface-mode.css"
 const modes = [
   { id: "top", layout: "horizontal" },
   { id: "side", layout: "vertical" },
+  { id: "projects", layout: "projects" },
   { id: "inbox", layout: "inbox" },
 ] as const satisfies { id: string; layout: TabLayout }[]
 
@@ -39,6 +40,9 @@ export function InterfaceModeSetting() {
                 </Match>
                 <Match when={mode.id === "side"}>
                   <SideTabsPreview />
+                </Match>
+                <Match when={mode.id === "projects"}>
+                  <ProjectsPreview />
                 </Match>
                 <Match when={mode.id === "inbox"}>
                   <InboxPreview />
@@ -95,6 +99,45 @@ function SideTabsPreview() {
               <i />
               <span style={{ width: `${width}%` }} />
             </span>
+          )}
+        </For>
+      </div>
+      <PreviewWorkspace />
+    </div>
+  )
+}
+
+// Mirrors the projects sidebar: a project header with its recent sessions indented beneath it.
+const projectGroups = [
+  { rows: [{ width: 62 }, { width: 44 }, { width: 56 }] },
+  { rows: [{ width: 70 }, { width: 48 }] },
+] as const
+
+function ProjectsPreview() {
+  return (
+    <div data-slot="preview-body">
+      <div data-slot="preview-rail">
+        <span data-slot="preview-rail-heading" />
+        <For each={projectGroups}>
+          {(group, groupIndex) => (
+            <>
+              <span data-slot="preview-project">
+                <i />
+                <span style={{ width: `${groupIndex() === 0 ? 58 : 44}%` }} />
+              </span>
+              <For each={group.rows}>
+                {(row, index) => (
+                  <span
+                    data-slot="preview-tab"
+                    data-indent
+                    data-active={groupIndex() === 0 && index() === 0 ? "" : undefined}
+                  >
+                    <i />
+                    <span style={{ width: `${row.width}%` }} />
+                  </span>
+                )}
+              </For>
+            </>
           )}
         </For>
       </div>

@@ -113,7 +113,7 @@ function storageEntries(input: SeedInput): [string, string, boolean][] {
           ),
         }
       : {}),
-    ...(input.settings ? { "settings.v3": input.settings } : {}),
+    "settings.v3": seededSettings(input.settings),
     ...(input.locale ? { "opencode.global.dat:language": { locale: input.locale } } : {}),
     ...(input.theme ? { "opencode-theme-id": input.theme.id, "opencode-color-scheme": input.theme.scheme } : {}),
     ...input.storage,
@@ -124,6 +124,20 @@ function storageEntries(input: SeedInput): [string, string, boolean][] {
     typeof value === "string" ? value : JSON.stringify(value),
     !!value && typeof value === "object" && !Array.isArray(value),
   ])
+}
+
+// Tests pin the layout they exercise; the projects sidebar has its own case. The product default stays covered by
+// settings/model.test.ts.
+function seededSettings(settings: Record<string, unknown> | undefined) {
+  const appearance = settings?.appearance
+
+  return {
+    ...settings,
+    appearance: {
+      tabLayout: "horizontal",
+      ...(appearance && typeof appearance === "object" && !Array.isArray(appearance) ? appearance : {}),
+    },
+  }
 }
 
 function tabEntry(tab: TabSeed) {

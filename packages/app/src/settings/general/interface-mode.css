@@ -131,6 +131,10 @@
     padding: 3px;
     border-radius: 2px;
 
+    &[data-indent] {
+      margin-inline-start: 7px;
+    }
+
     &[data-active] {
       background-color: var(--preview-fill);
     }
@@ -146,6 +150,26 @@
       height: 3px;
       border-radius: 1.5px;
       background-color: var(--preview-ink);
+    }
+  }
+
+  [data-slot="preview-project"] {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 3px 2px;
+
+    i {
+      width: 6px;
+      height: 6px;
+      border-radius: 1.5px;
+      background-color: var(--preview-ink-strong);
+    }
+
+    span {
+      height: 3px;
+      border-radius: 1.5px;
+      background-color: var(--preview-ink-strong);
     }
   }
 

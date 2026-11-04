@@ -18,6 +18,7 @@ import { applyPath, backPath, forwardPath, type HistoryLocation } from "./histor
 import { TitlebarTabStrip } from "@/shell/titlebar/tab-strip"
 import { macVerticalTrafficLights, SidebarToggle } from "@/shell/sidebar-toggle"
 import { SidebarInbox } from "@/shell/titlebar/inbox"
+import { SidebarProjects } from "@/shell/titlebar/projects"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { createMediaQuery } from "@solid-primitives/media"
 import { readSessionTabsRemovedDetail, SESSION_TABS_REMOVED_EVENT } from "@/shell/titlebar/session-events"
@@ -858,8 +859,7 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                             </div>
                             <div class="h-4 w-full shrink-0" aria-hidden="true" />
                             <div class="flex min-h-0 flex-1 flex-col gap-1">
-                              <Show
-                                when={settings.appearance.tabLayout() === "inbox"}
+                              <Switch
                                 fallback={
                                   <TitlebarTabStrip
                                     orientation="vertical"
@@ -878,8 +878,13 @@ export function Titlebar(props: { verticalTabs?: { mount?: HTMLElement } }) {
                                   />
                                 }
                               >
-                                <SidebarInbox />
-                              </Show>
+                                <Match when={settings.appearance.tabLayout() === "inbox"}>
+                                  <SidebarInbox />
+                                </Match>
+                                <Match when={settings.appearance.tabLayout() === "projects"}>
+                                  <SidebarProjects />
+                                </Match>
+                              </Switch>
                             </div>
                             <Show when={titlebarItems.ids().length > 0}>
                               <div data-slot="vertical-tabs-footer" class="mt-2 flex w-full shrink-0 flex-col">

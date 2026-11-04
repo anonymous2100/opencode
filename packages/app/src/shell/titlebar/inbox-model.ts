@@ -293,6 +293,12 @@ export function createSessionInbox(options: { archived?: boolean } = {}) {
     byKey,
     selected,
     open,
+    /** Re-reads the session indexes behind the rows, for a view's refresh control. */
+    refresh: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["inbox-sessions"] }),
+        queryClient.invalidateQueries({ queryKey: ["inbox-archived-sessions"] }),
+      ]).then(() => undefined),
     loadBranches,
     branchLoading: (entry: InboxEntry) =>
       !vcs.settled[locationKey(entry)] && !entry.ctx.data.location.vcs.info(entry.session.location),
