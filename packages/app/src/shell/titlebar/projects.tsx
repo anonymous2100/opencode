@@ -28,7 +28,7 @@ import { useSettingsSurface } from "@/settings/surface"
 import { setSidebarUnread } from "@/shell/sidebar-peek"
 import { useTabs } from "@/shell/tabs/tabs"
 import { useDirectoryPicker } from "@/workspaces/selection/picker"
-import { type InboxEntry, type SessionInbox, createSessionInbox } from "./inbox-model"
+import { type InboxEntry, type InboxStatus, type SessionInbox, createSessionInbox } from "./inbox-model"
 import {
   buildProjectSessionGroups,
   projectSessionKey,
@@ -59,7 +59,13 @@ export function SidebarProjects() {
     expanded: {},
   })
 
-  const connections = createMemo(() => servers.visible.map((conn) => ({ conn, ctx: global.ensureServerCtx(conn) })))
+  const connections = createMemo(() =>
+    servers.visible.flatMap((conn) => {
+      const ctx = global.serverCtx(ServerConnection.key(conn))
+
+      return ctx ? [{ conn, ctx }] : []
+    }),
+  )
 
   const groups = createMemo(() => buildProjectSessionGroups({ connections: connections(), entries: inbox.entries() }))
 
@@ -191,6 +197,7 @@ export function SidebarProjects() {
     const frame = requestAnimationFrame(() => {
       // Entry keys join the server and session with a NUL; encode it so the attribute survives the DOM.
       const encoded = encodeURIComponent(key)
+
       const row = [...root.querySelectorAll<HTMLElement>("[data-entry-key]")].find(
         (element) => element.dataset.entryKey === encoded,
       )
@@ -292,7 +299,7 @@ export function SidebarProjects() {
                   onOpen={(entry) => inbox.open(entry)}
                   onArchive={(entry) => void inbox.archive(entry)}
                   onDelete={(entry) => dialog.show(() => <DeleteDialog entry={entry} inbox={inbox} />)}
-                  now={inbox.now()}
+                  now={inbox.now}
                   language={language}
                   servers={servers}
                 />
@@ -323,7 +330,7 @@ function ProjectSection(props: {
   expanded: boolean
   active: boolean
   selectedKey: string | undefined
-  now: number
+  now: (status: InboxStatus) => number
   language: Language
   servers: Servers
   onToggle: () => void
@@ -489,7 +496,7 @@ function ProjectSection(props: {
 function ProjectSessionRow(props: {
   entry: InboxEntry
   selected: boolean
-  now: number
+  now: (status: InboxStatus) => number
   language: Language
   onOpen: () => void
   onArchive: () => void
@@ -498,7 +505,7 @@ function ProjectSessionRow(props: {
   const status = () => props.entry.status
   const unread = () => status() === "done" || status() === "failed" || status() === "approval" || status() === "input"
   const title = () => sessionTabTitle(props.entry.session.title, props.language.t("session.tab.session"))
-  const age = () => sessionAge(props.entry.session, props.now, props.language)
+  const age = () => sessionAge(props.entry.session, props.now(status()), props.language)
 
   return (
     <Menu.Context modal={false}>

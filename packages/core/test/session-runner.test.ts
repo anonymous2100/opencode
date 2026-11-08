@@ -77,7 +77,7 @@ import { SessionSystemPrompt } from "@opencode/core/session/system-prompt"
 import { ID, Model } from "@opencode/core/model"
 import { Location } from "@opencode/core/location"
 import { Provider } from "@opencode/core/provider"
-import { Cause, Context, DateTime, Deferred, Effect, Exit, Fiber, Layer, Queue, Schema, Scope, Stream } from "effect"
+import { Cause, Context, DateTime, Deferred, Effect, Exit, Fiber, Layer, Queue, Schema, Scope, Stream, Tracer } from "effect"
 import { TestClock } from "effect/testing"
 import { and, asc, desc, eq, sql } from "drizzle-orm"
 import { testEffect } from "./lib/effect"
@@ -231,6 +231,7 @@ const makeRunnerState = (compaction?: SessionRunnerModel.Resolved["compaction"])
     authorizations: new Array<Tool.Context>(),
     executions: new Array<string>(),
     closedTransports: new Array<Session.ID>(),
+    spans: new Array<Tracer.NativeSpan>(),
     blockTools: (count = 1) =>
       Effect.acquireRelease(
         Effect.all({ started: Deferred.make<void>(), release: Deferred.make<void>() }).pipe(
@@ -470,7 +471,22 @@ const layer = Layer.unwrap(
           awaitIdle: coordinator.awaitIdle,
         })
       }),
-    ).pipe(Layer.provide(runnerLayer), Layer.orDie)
+    ).pipe(
+      Layer.provide(runnerLayer),
+      Layer.provide(
+        Layer.succeed(
+          Tracer.Tracer,
+          Tracer.make({
+            span(options) {
+              const span = new Tracer.NativeSpan(options)
+              state.spans.push(span)
+              return span
+            },
+          }),
+        ),
+      ),
+      Layer.orDie,
+    )
     return AppNodeBuilder.build(
       LayerNode.group([
         Database.node,
@@ -1619,7 +1635,10 @@ describe("SessionRunnerLLM", () => {
         }),
       )
       yield* s.admit("Echo before moving")
-      yield* s.llm.push(TestLLM.toolCall("call-move", "echo", { text: "moving" }), TestLLM.text("Done", "text-after-move"))
+      yield* s.llm.push(
+        TestLLM.toolCall("call-move", "echo", { text: "moving" }),
+        TestLLM.text("Done", "text-after-move"),
+      )
       const tools = yield* s.blockTools()
       const run = yield* s.resume.pipe(Effect.forkChild)
       yield* tools.started
@@ -1905,7 +1924,14 @@ describe("SessionRunnerLLM", () => {
 
     for (const field of [
       "model",
-      "generation",
+      "maxTokens",
+      "temperature",
+      "topP",
+      "topK",
+      "frequencyPenalty",
+      "presencePenalty",
+      "seed",
+      "stop",
       "providerOptions",
       "http",
       "headers",
@@ -2318,7 +2344,7 @@ describe("SessionRunnerLLM", () => {
       sessionID,
       model: { ...model, variant: Model.VariantID.make("low") },
     })
-    s.currentModel = LanguageModel.update(s.currentModel, { defaults: { providerOptions: { effort: "low" } } })
+    s.currentModel = LanguageModel.update(s.currentModel, { options: { providerOptions: { effort: "low" } } })
     yield* s.llm.push(TestLLM.text("Later answer", "text-effort-low"))
     yield* s.runPrompt("Second")
 
@@ -2810,7 +2836,14 @@ describe("SessionRunnerLLM", () => {
           "model",
           "system",
           "tools",
-          "generation",
+          "maxTokens",
+          "temperature",
+          "topP",
+          "topK",
+          "frequencyPenalty",
+          "presencePenalty",
+          "seed",
+          "stop",
           "providerOptions",
           "toolChoice",
           "cache",
@@ -3606,7 +3639,7 @@ describe("SessionRunnerLLM", () => {
     expect(yield* Effect.exit(s.resume)).toMatchObject({ _tag: "Failure" })
 
     expect(s.requests).toHaveLength(1)
-    expect(s.requests[0]?.generation?.maxTokens).toBe(50)
+    expect(s.requests[0]?.maxTokens).toBe(50)
     expect(yield* s.context).toContainEqual(
       expect.objectContaining({
         type: "compaction",
@@ -3819,10 +3852,10 @@ describe("SessionRunnerLLM", () => {
     yield* s.llm.push(TestLLM.text("Continued", "text-fitted-final"))
     yield* s.runPrompt("Continue")
 
-    expect(s.requests[0]?.generation?.maxTokens).toBe(64_000)
+    expect(s.requests[0]?.maxTokens).toBe(64_000)
     // 1% of the window stays unused, since strict providers reject a request that overshoots it by a few tokens.
-    expect(s.requests[1]?.generation?.maxTokens).toBeLessThan(99_000 - 50_000)
-    expect(s.requests[1]?.generation?.maxTokens).toBeGreaterThan(99_000 - 50_000 - 200)
+    expect(s.requests[1]?.maxTokens).toBeLessThan(99_000 - 50_000)
+    expect(s.requests[1]?.maxTokens).toBeGreaterThan(99_000 - 50_000 - 200)
   })
 
   scenario("caps the output limit a large model advertises", function* (s) {
@@ -3830,7 +3863,7 @@ describe("SessionRunnerLLM", () => {
     yield* s.llm.push(TestLLM.text("Answer", "text-large-output"))
     yield* s.runPrompt("Question")
 
-    expect(s.requests[0]?.generation?.maxTokens).toBe(256_000)
+    expect(s.requests[0]?.maxTokens).toBe(256_000)
   })
 
   scenario("gives the summary its full output limit when the conversation overshot the threshold", function* (s) {
@@ -3848,8 +3881,8 @@ describe("SessionRunnerLLM", () => {
     expect(s.requests).toHaveLength(2)
     expect(userTexts(s.requests[0]).at(-1)).toContain("## Objective")
     // The summary may use the whole 30k reserve of a 200k window.
-    expect(s.requests[0]?.generation?.maxTokens).toBe(30_000)
-    expect(s.requests[1]?.generation?.maxTokens).toBe(32_000)
+    expect(s.requests[0]?.maxTokens).toBe(30_000)
+    expect(s.requests[1]?.maxTokens).toBe(32_000)
   })
 
   scenario("keeps the summary its room on a small window", function* (s) {
@@ -3866,8 +3899,8 @@ describe("SessionRunnerLLM", () => {
 
     expect(s.requests).toHaveLength(2)
     expect(userTexts(s.requests[0]).at(-1)).toContain("## Objective")
-    expect(s.requests[0]?.generation?.maxTokens).toBe(16_000)
-    expect(s.requests[1]?.generation?.maxTokens).toBe(16_000)
+    expect(s.requests[0]?.maxTokens).toBe(16_000)
+    expect(s.requests[1]?.maxTokens).toBe(16_000)
   })
 
   scenario("publishes the original overflow when recovery summarization fails", function* (s) {
@@ -5766,7 +5799,11 @@ describe("SessionRunnerLLM", () => {
     expect(s.requests).toHaveLength(1)
     expect(yield* s.context).toMatchObject([
       Expected.user("Fail durably"),
-      { type: "assistant", finish: "error", error: { type: "provider.invalid-request", message: "Provider unavailable" } },
+      {
+        type: "assistant",
+        finish: "error",
+        error: { type: "provider.invalid-request", message: "Provider unavailable" },
+      },
     ])
   })
 
@@ -5778,7 +5815,11 @@ describe("SessionRunnerLLM", () => {
     expect(s.requests).toHaveLength(1)
     expect(yield* s.context).toMatchObject([
       Expected.user("Fail before step"),
-      { type: "assistant", finish: "error", error: { type: "provider.invalid-request", message: "Provider unavailable" } },
+      {
+        type: "assistant",
+        finish: "error",
+        error: { type: "provider.invalid-request", message: "Provider unavailable" },
+      },
     ])
   })
 
@@ -6004,6 +6045,44 @@ describe("SessionRunnerLLM", () => {
     ])
   })
 
+  for (const failed of [
+    { name: "before output", stream: () => Stream.fail(providerUnavailable()) },
+    {
+      name: "after output",
+      stream: () =>
+        TestLLM.failAfter(
+          providerUnavailable(),
+          LLMEvent.stepStart({ index: 0 }),
+          LLMEvent.textStart({ id: "traced-partial" }),
+          LLMEvent.textDelta({ id: "traced-partial", text: "Partial" }),
+        ),
+    },
+  ])
+    scenario(`marks only the retried attempt span with its attempt number ${failed.name}`, function* (s) {
+      yield* s.admit("Trace retried attempt")
+      yield* s.llm.push(failed.stream())
+      yield* s.llm.push(TestLLM.text("Recovered", "traced-retry-success"))
+
+      const scheduled = yield* subscribeRetries(s)
+      const run = yield* s.resume.pipe(Effect.forkChild)
+      yield* Queue.take(scheduled)
+      yield* TestClock.adjust("2400 millis")
+      yield* Fiber.join(run)
+
+      expect(s.requests).toHaveLength(2)
+      expect(
+        s.spans
+          .filter((span) => span.name === "SessionStep.attempt")
+          .map((span) => ({
+            error: span.attributes.get("error.type"),
+            attempt: span.attributes.get("opencode.retry.attempt"),
+          })),
+      ).toEqual([
+        { error: "Transport", attempt: undefined },
+        { error: undefined, attempt: 2 },
+      ])
+    })
+
   scenario("retries an unknown finish before output", function* (s) {
     yield* s.admit("Retry unknown finish")
     yield* s.llm.push([
@@ -6106,7 +6185,10 @@ describe("SessionRunnerLLM", () => {
     // the window instead of rejecting it.
     s.currentModel = recoveryModel
     yield* s.llm.push(
-      TestLLM.complete({ reason: { normalized: "length" }, usage: { inputTokens: 199_994, nonCachedInputTokens: 199_994, outputTokens: 0 } }),
+      TestLLM.complete({
+        reason: { normalized: "length" },
+        usage: { inputTokens: 199_994, nonCachedInputTokens: 199_994, outputTokens: 0 },
+      }),
       TestLLM.text("## Objective\n- summary", "summary"),
       TestLLM.text("Done", "done"),
     )
