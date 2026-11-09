@@ -53,6 +53,9 @@ html:has([data-site][data-theme="dark"]) {
   /* Light follows Settings › Light background (pure white unless set). */
   --bg: light-dark(#fff, #0c0c0c);
   --bg-weak: light-dark(hsl(0, 0%, 96%), hsl(0, 0%, 10%));
+  /* A pressed full-width row on phones (the docs' sticky rows, the Contents list, the DOCS menu): a
+     subtle surface tint, lighter than the chevrons' and menus' press fills. */
+  --row-press: var(--bg-weak);
   /* The product cards' media backdrop (products.css), which their covers and reels are graded to in
      both themes. */
   --card-media-bg: #161616;
@@ -3385,11 +3388,22 @@ html:has([data-site][data-theme="dark"]) {
     font-size: var(--fs-ui);
     font-weight: 500;
     text-decoration: none;
-    transition: background-color 150ms ease;
+    /* Hidden once the bar has closed. iOS Safari keeps tinting its bottom toolbar from the blue
+       link it last pinned to the bottom edge for as long as the link is drawn, even unpinned and
+       clipped to nothing, so the toolbar would stay blue after the bar has gone. */
+    visibility: hidden;
+    transition:
+      background-color 150ms ease,
+      visibility 0s 300ms;
   }
 
   &[data-shown] {
     grid-template-rows: 1fr;
+
+    a {
+      visibility: visible;
+      transition: background-color 150ms ease;
+    }
 
     a > span {
       opacity: 1;
@@ -3401,6 +3415,10 @@ html:has([data-site][data-theme="dark"]) {
   @media (prefers-reduced-motion: reduce) {
     & {
       transition: none;
+    }
+
+    a {
+      transition: background-color 150ms ease;
     }
 
     /* Important, past the page-wide reduced-motion rule that zeroes every transition on small
@@ -3417,6 +3435,7 @@ html:has([data-site][data-theme="dark"]) {
    with the bottom's blue. */
 [data-site][data-letters-motion="instant"] [data-component="letters-bar"] {
   &,
+  a,
   a > span {
     transition: none;
   }
