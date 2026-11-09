@@ -1,4 +1,3 @@
-import type { SessionInfo } from "@opencode/client/promise"
 import { Key } from "@solid-primitives/keyed"
 import { ActivityRing } from "@opencode/ui/activity-ring"
 import { Button } from "@opencode/ui/button"
@@ -505,7 +504,17 @@ function ProjectSessionRow(props: {
   const status = () => props.entry.status
   const unread = () => status() === "done" || status() === "failed" || status() === "approval" || status() === "input"
   const title = () => sessionTabTitle(props.entry.session.title, props.language.t("session.tab.session"))
-  const age = () => sessionAge(props.entry.session, props.now(status()), props.language)
+
+  const age = () => {
+    // The inbox model times waiting rows from their request and working rows from their run start.
+    if (props.entry.since === undefined) return ""
+
+    const seconds = Math.max(0, Math.floor((props.now(status()) - props.entry.since) / 1000))
+
+    if (status() === "working" && seconds < 60) return props.language.plural("sidebar.inbox.elapsed.seconds", seconds)
+
+    return seconds < 60 ? props.language.t("sidebar.inbox.time.now") : sessionAge(seconds, props.language)
+  }
 
   return (
     <Menu.Context modal={false}>
@@ -607,12 +616,7 @@ function DeleteDialog(props: { entry: InboxEntry; inbox: SessionInbox }) {
   )
 }
 
-function sessionAge(session: SessionInfo, now: number, language: Language) {
-  // `time.updated` moves when a prompt is enqueued, so `time.idle` is when the last run ended.
-  const seconds = Math.max(0, Math.floor((now - (session.time.idle ?? session.time.updated)) / 1000))
-
-  if (seconds < 60) return language.t("sidebar.inbox.time.now")
-
+function sessionAge(seconds: number, language: Language) {
   if (seconds < 3_600) return language.plural("sidebar.inbox.elapsed.minutes", Math.floor(seconds / 60))
 
   if (seconds < 86_400) return language.plural("sidebar.inbox.elapsed.hours", Math.floor(seconds / 3_600))
